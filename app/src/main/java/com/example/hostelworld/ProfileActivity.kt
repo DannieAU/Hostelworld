@@ -88,10 +88,52 @@ class ProfileActivity : AppCompatActivity() {
         // 8. Bottom Navigation Click Listener
         bottomNavProfile.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_explore -> finish()
-                R.id.nav_host_dashboard -> finish()
+                R.id.nav_explore -> {
+                    startActivity(android.content.Intent(this, TravelerDashboardActivity::class.java))
+                    finish()
+                }
+                R.id.nav_trips -> {
+                    startActivity(android.content.Intent(this, SearchResultsActivity::class.java))
+                    finish()
+                }
+                R.id.nav_chat -> {
+                    startActivity(android.content.Intent(this, ChatListActivity::class.java))
+                    finish()
+                }
+                R.id.nav_events -> {
+                    startActivity(android.content.Intent(this, EventsActivity::class.java))
+                    finish()
+                }
+                R.id.nav_profile -> {
+                    val intent = android.content.Intent(this, ProfileActivity::class.java)
+                    intent.putExtra("USER_NAME", userName)
+                    intent.putExtra("USER_EMAIL", userEmail)
+                    intent.putExtra("USER_ROLE", userRole)
+                    startActivity(intent)
+                    finish()
+                }
             }
             true
         }
+
+        // Setup FR-14: Open Edit Screen
+        val btnEdit = findViewById<android.widget.Button>(R.id.btnGoToEdit)
+        btnEdit.setOnClickListener {
+            val intent = android.content.Intent(this, EditProfileActivity::class.java)
+            startActivity(intent)
+        }
+    } // <-- Ends onCreate
+
+    // Refresh the text every time you look at the screen!
+    override fun onResume() {
+        super.onResume()
+        val prefs = getSharedPreferences("UserProfile", MODE_PRIVATE)
+
+        val tvBio = findViewById<TextView>(R.id.tvDisplayBio)
+        val tvInterests = findViewById<TextView>(R.id.tvDisplayInterests)
+
+        // Grab the saved text, or show a default message if it's empty
+        tvBio.text = prefs.getString("BIO", "No bio added yet.")
+        tvInterests.text = prefs.getString("INTERESTS", "No interests added yet.")
     }
-}
+} // <-- Ends ProfileActivity

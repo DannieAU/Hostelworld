@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "204471831338",
+    "project_id": "hostelworld-454d8",
+    "storage_bucket": "hostelworld-454d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:204471831338:android:fcee4f899ec061a33a6c53",
+        "android_client_info": {
+          "package_name": "com.example.hostelworld"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "204471831338-gkhmb4052onqldrk5b66h50q3o2eirii.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbZKcMBFZE-ITSVeH0CeciroQyxkobxIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "204471831338-gkhmb4052onqldrk5b66h50q3o2eirii.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

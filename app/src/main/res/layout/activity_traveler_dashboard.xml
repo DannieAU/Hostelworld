@@ -25,7 +25,7 @@
         android:layout_height="48dp"
         android:layout_marginEnd="24dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/circle_placeholder"
+        android:src="@drawable/my_profile_pic"
         app:layout_constraintBottom_toBottomOf="@+id/tvTravelerHeader"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tvTravelerHeader"
@@ -108,26 +108,39 @@
                 android:text="The best place to find travel buddies! See everyone's plans and share your own."
                 android:textColor="#757575" />
 
-            <HorizontalScrollView
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Meet the Community"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTravelBuddies"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvBookedTrips"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:scrollbars="none">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="200dp"
-                    android:orientation="horizontal">
-                    <View android:layout_width="160dp" android:layout_height="match_parent" android:background="#F0F0F0" android:layout_marginEnd="16dp"/>
-                    <View android:layout_width="160dp" android:layout_height="match_parent" android:background="#F0F0F0" />
-                </LinearLayout>
-            </HorizontalScrollView>
+                android:nestedScrollingEnabled="false" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <!-- Your Bottom Navigation Bar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavTraveler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/traveler_bottom_nav_menu" /> </androidx.constraintlayout.widget.ConstraintLayout>
+        app:menu="@menu/traveler_bottom_nav_menu" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

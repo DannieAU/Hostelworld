@@ -4,8 +4,9 @@ data class Property(
     val id: String,
     val name: String,
     val destination: String,
-    val type: String, // e.g., "Hostel", "Hotel"
+    val type: String,
     val rating: Double,
     val pricePerNight: Double,
-    val amenities: List<String>
+    val amenities: List<String>,
+    val imageResId: Int // <-- ADD THIS LINE
 )

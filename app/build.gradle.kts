@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -45,4 +46,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // Import the BoM (Bill of Materials) to manage versions easily
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    // Add the dependency for the Cloud Firestore library
+    implementation("com.google.firebase:firebase-firestore")
+    // If you plan to use Auth later, add this too
+    implementation("com.google.firebase:firebase-auth")
 }

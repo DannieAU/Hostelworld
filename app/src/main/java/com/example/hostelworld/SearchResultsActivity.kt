@@ -22,11 +22,11 @@ class SearchResultsActivity : AppCompatActivity() {
 
     // Mock Database
     private val allProperties = listOf(
-        Property("1", "Tokyo Backpackers", "Tokyo", "Hostel", 9.5, 25.0, listOf("WiFi", "Kitchen")),
-        Property("2", "Shinjuku Budget Hotel", "Tokyo", "Hotel", 8.2, 85.0, listOf("WiFi", "AC")),
-        Property("3", "Kyoto Zen Hostel", "Kyoto", "Hostel", 9.8, 30.0, listOf("WiFi")),
-        Property("4", "Osaka Party Hostel", "Osaka", "Hostel", 7.5, 15.0, listOf("Bar", "WiFi")),
-        Property("5", "Tokyo Luxury Dorms", "Tokyo", "Hostel", 9.9, 45.0, listOf("AC", "Breakfast"))
+        Property("1", "Tokyo Backpackers", "Tokyo", "Hostel", 9.5, 25.0, listOf("WiFi"), R.drawable.room_1),
+        Property("2", "Shinjuku Budget Hotel", "Tokyo", "Hotel", 8.2, 85.0, listOf("WiFi"), R.drawable.room_2),
+        Property("3", "Kyoto Zen Hostel", "Kyoto", "Hostel", 9.8, 30.0, listOf("WiFi"), R.drawable.room_3),
+        Property("4", "Osaka Party Hostel", "Osaka", "Hostel", 7.5, 15.0, listOf("Bar", "WiFi"), R.drawable.room_4),
+        Property("5", "Tokyo Luxury Dorms", "Tokyo", "Hostel", 9.9, 45.0, listOf("AC", "Breakfast"), R.drawable.room_5)
     )
 
     private var currentFilteredList = allProperties.toList()
@@ -74,26 +74,32 @@ class SearchResultsActivity : AppCompatActivity() {
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_explore -> {
-                    // Close this screen to go back to the Traveler Dashboard
+                    startActivity(android.content.Intent(this, TravelerDashboardActivity::class.java))
                     finish()
                 }
                 R.id.nav_trips -> {
-                    // We are already here, do nothing
+                    startActivity(android.content.Intent(this, SearchResultsActivity::class.java))
+                    finish()
+                }
+                R.id.nav_chat -> {
+                    startActivity(android.content.Intent(this, ChatListActivity::class.java))
+                    finish()
                 }
                 R.id.nav_events -> {
-                    // Feature removed: Currently does nothing
+                    startActivity(android.content.Intent(this, EventsActivity::class.java))
+                    finish()
                 }
                 R.id.nav_profile -> {
-                    // Open Profile and pass the user data forward
-                    val intent = android.content.Intent(this@SearchResultsActivity, ProfileActivity::class.java)
+                    val intent = android.content.Intent(this, ProfileActivity::class.java)
                     intent.putExtra("USER_NAME", userName)
                     intent.putExtra("USER_EMAIL", userEmail)
-                    intent.putExtra("USER_ROLE", "TRAVELER")
                     startActivity(intent)
+                    finish()
                 }
             }
             true
         }
+
         // --- Make Dates Interactive (Check-in & Check-out Range) ---
         val tvSearchDates = findViewById<TextView>(R.id.tvSearchDates)
         tvSearchDates.setOnClickListener {
@@ -105,17 +111,13 @@ class SearchResultsActivity : AppCompatActivity() {
 
             // Handle what happens when the user clicks "Save"
             datePicker.addOnPositiveButtonClickListener { selection ->
-                // The selection contains the start and end dates in milliseconds
                 val startDateMillis = selection.first
                 val endDateMillis = selection.second
-
-                // Create a formatter to convert milliseconds to "Apr 20" format
                 val simpleDateFormat = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
 
                 val startDateString = simpleDateFormat.format(java.util.Date(startDateMillis))
                 val endDateString = simpleDateFormat.format(java.util.Date(endDateMillis))
 
-                // Update the text view with the formatted range
                 tvSearchDates.text = "$startDateString - $endDateString"
             }
 
@@ -131,13 +133,12 @@ class SearchResultsActivity : AppCompatActivity() {
             androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Number of Guests")
                 .setItems(guestOptions) { dialog, which ->
-                    // Update the TextView with the selected option
                     tvSearchGuests.text = guestOptions[which]
                     dialog.dismiss()
                 }
                 .show()
         }
-    }
+    } // <-- Ends onCreate
 
     private fun showFilterDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null)
@@ -173,15 +174,13 @@ class SearchResultsActivity : AppCompatActivity() {
         val searchQuery = etSearchDestination.text.toString().trim().lowercase()
 
         currentFilteredList = allProperties.filter { property ->
-            // Match Destination OR Name
             val matchesSearch = property.destination.lowercase().contains(searchQuery) ||
                     property.name.lowercase().contains(searchQuery)
-
             val matchesPrice = property.pricePerNight <= maxPrice
             val matchesRating = property.rating >= minRating
 
             matchesSearch && matchesPrice && matchesRating
-        }.sortedBy { it.pricePerNight } // Default Sort by Price
+        }.sortedBy { it.pricePerNight }
 
         adapter.updateData(currentFilteredList)
         updateResultCount()
@@ -190,4 +189,4 @@ class SearchResultsActivity : AppCompatActivity() {
     private fun updateResultCount() {
         tvResultCount.text = "${currentFilteredList.size} Results found"
     }
-}
+} // <-- Ends SearchResultsActivity

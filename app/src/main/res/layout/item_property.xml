@@ -13,10 +13,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <View
+        <ImageView
+            android:id="@+id/ivPropImage"
             android:layout_width="match_parent"
             android:layout_height="180dp"
-            android:background="#E0E0E0" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/room_1" />
 
         <LinearLayout
             android:layout_width="match_parent"

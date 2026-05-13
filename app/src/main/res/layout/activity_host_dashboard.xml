@@ -27,7 +27,7 @@
         android:layout_height="48dp"
         android:layout_marginEnd="24dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/circle_placeholder"
+        android:src="@drawable/my_profile_pic"
         app:layout_constraintBottom_toBottomOf="@+id/tvHostHeader"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tvHostHeader"
@@ -72,7 +72,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:orientation="vertical">
-                <TextView android:text="12" android:textSize="24sp" android:textStyle="bold" android:textColor="#000000" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvActiveListings" android:text="12" android:textSize="24sp" android:textStyle="bold" android:textColor="#000000" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                 <TextView android:text="Active Listings" android:textSize="12sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -105,6 +105,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/tvAddNew"
                     android:layout_alignParentEnd="true"
                     android:text="Add New"
                     android:textColor="#D45D3A"
@@ -118,19 +119,12 @@
                 android:text="Manage your room availability and pricing."
                 android:textColor="#757575" />
 
-            <HorizontalScrollView
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDashboardProperties"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:scrollbars="none">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="180dp"
-                    android:orientation="horizontal">
-                    <View android:layout_width="140dp" android:layout_height="match_parent" android:background="#E0E0E0" android:layout_marginEnd="16dp"/>
-                    <View android:layout_width="140dp" android:layout_height="match_parent" android:background="#E0E0E0" />
-                </LinearLayout>
-            </HorizontalScrollView>
+                android:orientation="horizontal" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -150,4 +144,5 @@
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/host_bottom_nav_menu" /> </androidx.constraintlayout.widget.ConstraintLayout>
+        app:menu="@menu/host_bottom_nav_menu" />
+</androidx.constraintlayout.widget.ConstraintLayout>

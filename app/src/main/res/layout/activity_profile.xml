@@ -30,7 +30,7 @@
                     android:layout_width="120dp"
                     android:layout_height="120dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/circle_placeholder"
+                    android:src="@drawable/my_profile_pic"
                     app:shapeAppearanceOverlay="@style/CircleShape"
                     app:strokeColor="#E0E0E0"
                     app:strokeWidth="1dp" />
@@ -68,15 +68,74 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="24dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="32dp"
                 android:backgroundTint="#D45D3A"
                 android:text="Log out"
-                android:textAllCaps="false"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:cornerRadius="12dp" />
+                app:cornerRadius="8dp" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="24dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="My Bio"
+                    android:textAlignment="center"
+                    android:textColor="#7C3AED"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="About Me"
+                    android:textAlignment="center"
+                    android:textColor="#7C3AED"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDisplayBio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Tell other travelers about yourself..."
+                    android:textAlignment="center"
+                    android:textColor="#555555"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Travel Interests"
+                    android:textAlignment="center"
+                    android:textColor="#7C3AED"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDisplayInterests"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="e.g., Backpacking, Food Tours, Museums"
+                    android:textAlignment="center"
+                    android:textColor="#555555"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/btnGoToEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="24dp"
+                    android:backgroundTint="#D45D3A"
+                    android:textColor="#FFFFFF"
+                    android:text="Edit Profile" />
+            </LinearLayout>
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"

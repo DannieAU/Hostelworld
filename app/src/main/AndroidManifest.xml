@@ -47,6 +47,42 @@
             android:name=".SearchResultsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".PropertyDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".PublicProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".EditProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChatListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ChatRoomActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".EventsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".HostListingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".AddPropertyActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".HostProfileActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

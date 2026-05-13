@@ -24,7 +24,14 @@ class TravelerDashboardActivity : AppCompatActivity() {
             intent.putExtra("USER_EMAIL", userEmail) // Pass Email
             startActivity(intent)
         }
+        // Setup Booked Trips RecyclerView
+        val rvBookedTrips = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvBookedTrips)
 
+        // 1. Tell it to display items in a vertical list
+        rvBookedTrips.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+
+        // 2. Set the adapter to ONLY the new BookedTripAdapter
+        rvBookedTrips.adapter = BookedTripAdapter(BookingManager.bookedTrips.toMutableList())
         // 2. Setup Bottom Navigation Listener
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavTraveler)
         bottomNavigationView.selectedItemId = R.id.nav_explore // Ensure Explore is highlighted by default
@@ -35,14 +42,18 @@ class TravelerDashboardActivity : AppCompatActivity() {
                     // Already on Dashboard, do nothing
                 }
                 R.id.nav_trips -> {
-                    // Navigate to Search Accommodations (FR-03/04) as the "Trips" tab
                     val intent = Intent(this@TravelerDashboardActivity, SearchResultsActivity::class.java)
                     intent.putExtra("USER_NAME", userName)
                     intent.putExtra("USER_EMAIL", userEmail)
                     startActivity(intent)
                 }
-                R.id.nav_events -> {
-                    // Feature removed: Currently does nothing
+                R.id.nav_chat -> {
+                    val intent = Intent(this@TravelerDashboardActivity, ChatListActivity::class.java)
+                    startActivity(intent)
+                }
+                R.id.nav_events -> { // <--- ADD THIS BLOCK HERE!
+                    val intent = Intent(this@TravelerDashboardActivity, EventsActivity::class.java)
+                    startActivity(intent)
                 }
                 R.id.nav_profile -> {
                     val intent = Intent(this@TravelerDashboardActivity, ProfileActivity::class.java)
@@ -54,5 +65,18 @@ class TravelerDashboardActivity : AppCompatActivity() {
             }
             true
         }
+
+        // Setup Community Horizontal List
+        val rvTravelBuddies = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvTravelBuddies)
+        rvTravelBuddies.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+        rvTravelBuddies.adapter = TravelerAdapter(UserManager.communityTravelers)
+    }
+    override fun onResume() {
+        super.onResume()
+        // Every time the user comes back to the dashboard, refresh the list!
+        val rvBookedTrips = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvBookedTrips)
+        // CHANGE THESE TWO LINES:
+        val adapter = rvBookedTrips.adapter as? BookedTripAdapter
+        adapter?.updateData(BookingManager.bookedTrips)
     }
 }

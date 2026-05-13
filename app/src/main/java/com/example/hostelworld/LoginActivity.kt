@@ -3,77 +3,106 @@ package com.example.hostelworld
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 
+// 1. ADDED THESE MISSING IMPORTS!
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
 class LoginActivity : AppCompatActivity() {
+
+    // 2. ADDED THE MISSING VARIABLES HERE!
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 3. WAKE UP FIREBASE FIRST!
+        FirebaseApp.initializeApp(this)
+
+        // Load the screen
         setContentView(R.layout.activity_login)
 
+        // Initialize Firebase Instances
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
+
         val etEmail = findViewById<TextInputEditText>(R.id.etEmail)
+        val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
         val btnLogin = findViewById<MaterialButton>(R.id.btnLogin)
         val tvGoToRegister = findViewById<TextView>(R.id.tvGoToRegister)
 
-        val passedName = intent.getStringExtra("USER_NAME") ?: "Guest" // Catch the name
-
-        // Retrieve data passed from RegisterActivity (if any)
-        val passedEmail = intent.getStringExtra("REGISTERED_EMAIL")
-
-        // Grab the role, default to "TRAVELER" if no role was passed
-        val passedRole = intent.getStringExtra("USER_ROLE") ?: "TRAVELER"
-
         // Pre-fill the email field if they just registered
+        val passedEmail = intent.getStringExtra("REGISTERED_EMAIL")
         if (!passedEmail.isNullOrEmpty()) {
             etEmail.setText(passedEmail)
         }
 
         // Handle Login Click
         btnLogin.setOnClickListener {
-            // Grab the text from the inputs
             val email = etEmail.text.toString().trim()
-            val etPassword = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etPassword)
             val password = etPassword.text.toString().trim()
 
-            // --- VALIDATION CHECKS ---
-
-            // 1. Check if Email is empty
+            // Validation Checks
             if (email.isEmpty()) {
                 etEmail.error = "Email address is required"
                 etEmail.requestFocus()
-                return@setOnClickListener // This STOPS the code so it doesn't log in
+                return@setOnClickListener
             }
 
-            // 2. Check if Password is empty
             if (password.isEmpty()) {
                 etPassword.error = "Password is required"
                 etPassword.requestFocus()
-                return@setOnClickListener // This STOPS the code so it doesn't log in
+                return@setOnClickListener
             }
 
-            // --- SUCCESS ---
-            // If the code makes it down here, both fields are filled out!
-            // Paste your EXISTING intent logic here:
+            // 4. THE ACTUAL FIREBASE LOGIN LOGIC!
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        val userId = auth.currentUser?.uid
 
-            val intent = if (passedRole == "HOST") {
-                Intent(this, HostDashboardActivity::class.java)
-            } else {
-                Intent(this, TravelerDashboardActivity::class.java)
-            }
+                        // Fetch their role from Firestore
+                        if (userId != null) {
+                            db.collection("users").document(userId).get()
+                                .addOnSuccessListener { document ->
+                                    if (document != null && document.exists()) {
+                                        val role = document.getString("role") ?: "TRAVELER"
+                                        val userName = document.getString("name") ?: "Guest"
 
-            intent.putExtra("USER_NAME", passedName)
-            intent.putExtra("USER_EMAIL", email)
-            intent.putExtra("USER_ROLE", passedRole)
-            startActivity(intent)
-            finish()
+                                        Toast.makeText(this, "Welcome back, $userName!", Toast.LENGTH_SHORT).show()
+
+                                        // Route them to the correct dashboard based on Firestore data!
+                                        val intent = if (role == "HOST") {
+                                            Intent(this, HostDashboardActivity::class.java)
+                                        } else {
+                                            Intent(this, TravelerDashboardActivity::class.java)
+                                        }
+
+                                        intent.putExtra("USER_NAME", userName)
+                                        intent.putExtra("USER_EMAIL", email)
+                                        intent.putExtra("USER_ROLE", role)
+                                        startActivity(intent)
+                                        finish()
+                                    } else {
+                                        Toast.makeText(this, "User data not found in database.", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        }
+                    } else {
+                        Toast.makeText(this, "Login Failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
         }
 
         // Navigate back to Registration
         tvGoToRegister.setOnClickListener {
-            val intent = Intent(this, RegisterActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, RegisterActivity::class.java))
             finish()
         }
     }

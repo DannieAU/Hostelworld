@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Profile"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="My Bio"
+        android:textColor="#7C3AED"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etEditBio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@android:drawable/editbox_background"
+        android:hint="Tell other travelers about yourself..."
+        android:inputType="textMultiLine"
+        android:minLines="4"
+        android:padding="12dp"
+        android:textColor="#000000" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Travel Interests"
+        android:textColor="#7C3AED"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etEditInterests"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@android:drawable/editbox_background"
+        android:hint="e.g., Backpacking, Food Tours"
+        android:inputType="text"
+        android:padding="12dp"
+        android:textColor="#000000" />
+
+    <Button
+        android:id="@+id/btnSaveEdits"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="32dp"
+        android:backgroundTint="#7C3AED"
+        android:text="Save Changes" />
+</LinearLayout>

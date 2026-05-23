@@ -5,7 +5,6 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- Scrollable Content -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,7 +15,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Hero Image Gallery -->
             <ImageView
                 android:id="@+id/ivDetailImage"
                 android:layout_width="match_parent"
@@ -30,7 +28,6 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Header Info -->
                 <TextView
                     android:id="@+id/tvDetailName"
                     android:layout_width="wrap_content"
@@ -50,7 +47,24 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <!-- Description -->
+                <TextView
+                    android:id="@+id/tvDetailBeds"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="#D45D3A"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDetailCancelPolicy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="#D32F2F"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -68,7 +82,6 @@
                     android:textColor="#555555"
                     android:textSize="14sp" />
 
-                <!-- Policies -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -86,7 +99,6 @@
                     android:textColor="#555555"
                     android:textSize="14sp" />
 
-                <!-- Map View (Placeholder) -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -109,7 +121,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Sticky Bottom Booking Bar -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
@@ -139,7 +150,6 @@
             android:text="Book Now" />
     </LinearLayout>
 
-    <!-- Floating Back Button -->
     <androidx.cardview.widget.CardView
         android:id="@+id/btnBack"
         android:layout_width="40dp"

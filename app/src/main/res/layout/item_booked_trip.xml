@@ -26,29 +26,60 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/tvBookedName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#000000"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Status: Confirmed"
-                android:textColor="#4CAF50"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btnCancelBooking"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:backgroundTint="#D32F2F"
-                android:text="Cancel Booking" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:id="@+id/tvBookedName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBookedDates"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#000000"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvBookedPolicy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#D32F2F"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Status: Confirmed"
+                    android:textColor="#4CAF50"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBookedTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#757575"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/btnCancelBooking"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:backgroundTint="#D32F2F"
+                    android:text="Cancel Booking" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -87,6 +87,16 @@
                     android:padding="12dp" />
             </LinearLayout>
 
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swCancelPolicy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:text="Allow Free Cancellation (48h prior)"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
             <Button
                 android:id="@+id/btnSaveListing"
                 android:layout_width="match_parent"

@@ -1,61 +1,79 @@
 package com.example.hostelworld
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.FirebaseFirestore
 
-class BookedTripAdapter(private var bookedTrips: MutableList<Property>) :
-    RecyclerView.Adapter<BookedTripAdapter.BookedViewHolder>() {
+class BookedTripAdapter(private val trips: MutableList<BookedTrip>) : RecyclerView.Adapter<BookedTripAdapter.TripViewHolder>() {
 
-    class BookedViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvName: TextView = view.findViewById(R.id.tvBookedName)
-        val ivImage: ImageView = view.findViewById(R.id.ivBookedImage)
+    inner class TripViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvPropName: TextView = view.findViewById(R.id.tvBookedName)
+        val tvDates: TextView = view.findViewById(R.id.tvBookedDates)
+        val tvPolicy: TextView = view.findViewById(R.id.tvBookedPolicy)
+        val tvTotalCost: TextView = view.findViewById(R.id.tvBookedTotal)
         val btnCancel: Button = view.findViewById(R.id.btnCancelBooking)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookedViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_booked_trip, parent, false)
-        return BookedViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TripViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_booked_trip, parent, false)
+        return TripViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: BookedViewHolder, position: Int) {
-        val property = bookedTrips[position]
-        holder.tvName.text = property.name
-        holder.ivImage.setImageResource(property.imageResId)
+    override fun onBindViewHolder(holder: TripViewHolder, position: Int) {
+        val trip = trips[position]
+        holder.tvPropName.text = trip.propertyName
+        holder.tvDates.text = "Dates: ${trip.dates}"
+        holder.tvPolicy.text = "Policy: ${trip.policy}"
+        holder.tvTotalCost.text = "Total: $${trip.totalCost}"
 
-        // Handle Cancellation
-        holder.btnCancel.setOnClickListener {
-            val context = holder.itemView.context
-            AlertDialog.Builder(context)
-                .setTitle("Cancel Booking")
-                .setMessage("Are you sure you want to cancel your stay at ${property.name}?")
-                .setPositiveButton("Yes, Cancel") { dialog, _ ->
-                    // Remove from our mock database
-                    BookingManager.bookedTrips.remove(property)
-                    // Refresh the specific list the adapter is holding
-                    bookedTrips.remove(property)
-                    notifyDataSetChanged() // Tell the UI to update
+        // --- FR-11: ENFORCE CANCELLATION RULES ---
+        if (trip.policy == "Non-Refundable") {
+            // Turn the button gray and disable the delete function
+            holder.btnCancel.setBackgroundColor(Color.parseColor("#9E9E9E"))
+            holder.btnCancel.text = "Non-Refundable"
 
-                    Toast.makeText(context, "Booking Cancelled", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Keep Booking", null)
-                .show()
+            holder.btnCancel.setOnClickListener {
+                Toast.makeText(holder.itemView.context, "The host has disabled cancellation for this booking.", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            // Flexible policy - Allow standard cancellation
+            holder.btnCancel.setBackgroundColor(Color.parseColor("#D32F2F"))
+            holder.btnCancel.text = "Cancel Booking"
+
+            holder.btnCancel.setOnClickListener {
+                val context = holder.itemView.context
+                val db = FirebaseFirestore.getInstance()
+
+                AlertDialog.Builder(context)
+                    .setTitle("Cancel Reservation")
+                    .setMessage("Are you sure you want to cancel this booking? This action cannot be undone.")
+                    .setPositiveButton("Yes, Cancel") { dialog, _ ->
+                        db.collection("bookings").document(trip.bookingId)
+                            .delete()
+                            .addOnSuccessListener {
+                                Toast.makeText(context, "Booking Cancelled Successfully", Toast.LENGTH_SHORT).show()
+                                val currentPosition = holder.adapterPosition
+                                if (currentPosition != RecyclerView.NO_POSITION) {
+                                    trips.removeAt(currentPosition)
+                                    notifyItemRemoved(currentPosition)
+                                }
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(context, "Failed to cancel: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                    .setNegativeButton("Keep Booking", null)
+                    .show()
+            }
         }
     }
 
-    override fun getItemCount() = bookedTrips.size
-
-    fun updateData(newTrips: List<Property>) {
-        bookedTrips.clear()
-        bookedTrips.addAll(newTrips)
-        notifyDataSetChanged()
-    }
+    override fun getItemCount() = trips.size
 }

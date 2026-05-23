@@ -8,5 +8,6 @@ data class Property(
     val rating: Double,
     val pricePerNight: Double,
     val amenities: List<String>,
-    val imageResId: Int // <-- ADD THIS LINE
+    val imageResId: Int,
+    val availableBeds: Int = 1 // <-- Added this to hold the capacity!
 )

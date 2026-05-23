@@ -9,10 +9,12 @@ import android.widget.EditText
 import android.widget.RatingBar
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SearchResultsActivity : AppCompatActivity() {
 
@@ -20,16 +22,11 @@ class SearchResultsActivity : AppCompatActivity() {
     private lateinit var tvResultCount: TextView
     private lateinit var etSearchDestination: EditText
 
-    // Mock Database
-    private val allProperties = listOf(
-        Property("1", "Tokyo Backpackers", "Tokyo", "Hostel", 9.5, 25.0, listOf("WiFi"), R.drawable.room_1),
-        Property("2", "Shinjuku Budget Hotel", "Tokyo", "Hotel", 8.2, 85.0, listOf("WiFi"), R.drawable.room_2),
-        Property("3", "Kyoto Zen Hostel", "Kyoto", "Hostel", 9.8, 30.0, listOf("WiFi"), R.drawable.room_3),
-        Property("4", "Osaka Party Hostel", "Osaka", "Hostel", 7.5, 15.0, listOf("Bar", "WiFi"), R.drawable.room_4),
-        Property("5", "Tokyo Luxury Dorms", "Tokyo", "Hostel", 9.9, 45.0, listOf("AC", "Breakfast"), R.drawable.room_5)
-    )
+    private var allProperties = mutableListOf<Property>()
+    private var currentFilteredList = listOf<Property>()
 
-    private var currentFilteredList = allProperties.toList()
+    // NEW: Variable to track how many guests the user is searching for (Default is 1)
+    private var selectedGuestCount = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,35 +37,27 @@ class SearchResultsActivity : AppCompatActivity() {
         val btnFilter = findViewById<Button>(R.id.btnFilter)
         val rvProperties = findViewById<RecyclerView>(R.id.rvProperties)
 
-        // Setup RecyclerView
         rvProperties.layoutManager = LinearLayoutManager(this)
         adapter = PropertyAdapter(currentFilteredList)
         rvProperties.adapter = adapter
-        updateResultCount()
 
-        // FR-03: Real-time Destination Search
+        fetchPropertiesFromFirebase()
+
         etSearchDestination.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                applyFilters(maxPrice = 200.0, minRating = 0.0) // Re-filter based on new text
+                applyFilters(maxPrice = 200.0, minRating = 0.0)
             }
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // FR-04: Open Filter Dialog
-        btnFilter.setOnClickListener {
-            showFilterDialog()
-        }
+        btnFilter.setOnClickListener { showFilterDialog() }
 
-        // --- Navigation Bar Logic ---
-
-        // Catch the user data passed from the Dashboard
+        // Navigation Bar Logic
         val userName = intent.getStringExtra("USER_NAME")
         val userEmail = intent.getStringExtra("USER_EMAIL")
 
         val bottomNavigationView = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavSearch)
-
-        // Highlight the "Trips" icon because we are browsing trips
         bottomNavigationView.selectedItemId = R.id.nav_trips
 
         bottomNavigationView.setOnItemSelectedListener { item ->
@@ -77,10 +66,7 @@ class SearchResultsActivity : AppCompatActivity() {
                     startActivity(android.content.Intent(this, TravelerDashboardActivity::class.java))
                     finish()
                 }
-                R.id.nav_trips -> {
-                    startActivity(android.content.Intent(this, SearchResultsActivity::class.java))
-                    finish()
-                }
+                R.id.nav_trips -> { }
                 R.id.nav_chat -> {
                     startActivity(android.content.Intent(this, ChatListActivity::class.java))
                     finish()
@@ -100,45 +86,67 @@ class SearchResultsActivity : AppCompatActivity() {
             true
         }
 
-        // --- Make Dates Interactive (Check-in & Check-out Range) ---
         val tvSearchDates = findViewById<TextView>(R.id.tvSearchDates)
         tvSearchDates.setOnClickListener {
-            // Build the Material Date Range Picker
             val builder = com.google.android.material.datepicker.MaterialDatePicker.Builder.dateRangePicker()
             builder.setTitleText("Select Check-in and Check-out Dates")
-
             val datePicker = builder.build()
 
-            // Handle what happens when the user clicks "Save"
             datePicker.addOnPositiveButtonClickListener { selection ->
-                val startDateMillis = selection.first
-                val endDateMillis = selection.second
                 val simpleDateFormat = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
-
-                val startDateString = simpleDateFormat.format(java.util.Date(startDateMillis))
-                val endDateString = simpleDateFormat.format(java.util.Date(endDateMillis))
-
+                val startDateString = simpleDateFormat.format(java.util.Date(selection.first))
+                val endDateString = simpleDateFormat.format(java.util.Date(selection.second))
                 tvSearchDates.text = "$startDateString - $endDateString"
             }
-
-            // Show the picker
             datePicker.show(supportFragmentManager, "DATE_RANGE_PICKER")
         }
 
-        // --- Make Guests Interactive ---
+        // --- NEW: MAKE GUESTS INTERACTIVE & TRIGGER FILTER ---
         val tvSearchGuests = findViewById<TextView>(R.id.tvSearchGuests)
         tvSearchGuests.setOnClickListener {
             val guestOptions = arrayOf("1 Guest", "2 Guests", "3 Guests", "4 Guests", "5+ Guests")
-
             androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Number of Guests")
                 .setItems(guestOptions) { dialog, which ->
                     tvSearchGuests.text = guestOptions[which]
+
+                    // Extract the number (which is the index 0-4. So index 0 = 1 guest)
+                    selectedGuestCount = which + 1
+
+                    // Instantly re-filter the list when the user selects a new guest count!
+                    applyFilters(200.0, 0.0)
+
                     dialog.dismiss()
                 }
                 .show()
         }
-    } // <-- Ends onCreate
+    }
+
+    private fun fetchPropertiesFromFirebase() {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("properties").get()
+            .addOnSuccessListener { documents ->
+                allProperties.clear()
+                for (doc in documents) {
+                    val id = doc.id
+                    val name = doc.getString("name") ?: "Unknown"
+                    val location = doc.getString("location") ?: "Unknown Location"
+                    val price = doc.getDouble("pricePerNight") ?: 0.0
+
+                    // GRAB THE BEDS FROM FIREBASE
+                    val beds = doc.getDouble("availableBeds")?.toInt() ?: 1
+
+                    val prop = Property(
+                        id, name, location, "Hostel", 5.0, price, listOf("WiFi"), R.drawable.room_1, beds
+                    )
+                    allProperties.add(prop)
+                }
+                applyFilters(200.0, 0.0)
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load properties", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     private fun showFilterDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_filter, null)
@@ -150,7 +158,6 @@ class SearchResultsActivity : AppCompatActivity() {
         val rbRating = dialogView.findViewById<RatingBar>(R.id.rbRating)
         val btnApplyFilters = dialogView.findViewById<Button>(R.id.btnApplyFilters)
 
-        // Dynamic price label update
         sbPrice.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 tvPriceLabel.text = "Up to $$progress"
@@ -162,11 +169,9 @@ class SearchResultsActivity : AppCompatActivity() {
         btnApplyFilters.setOnClickListener {
             val maxPrice = sbPrice.progress.toDouble()
             val minRating = rbRating.rating.toDouble()
-
             applyFilters(maxPrice, minRating)
             dialog.dismiss()
         }
-
         dialog.show()
     }
 
@@ -179,7 +184,10 @@ class SearchResultsActivity : AppCompatActivity() {
             val matchesPrice = property.pricePerNight <= maxPrice
             val matchesRating = property.rating >= minRating
 
-            matchesSearch && matchesPrice && matchesRating
+            // --- NEW: ENSURE THE PROPERTY HAS ENOUGH BEDS FOR THE SEARCH! ---
+            val matchesGuests = property.availableBeds >= selectedGuestCount
+
+            matchesSearch && matchesPrice && matchesRating && matchesGuests
         }.sortedBy { it.pricePerNight }
 
         adapter.updateData(currentFilteredList)
@@ -189,4 +197,4 @@ class SearchResultsActivity : AppCompatActivity() {
     private fun updateResultCount() {
         tvResultCount.text = "${currentFilteredList.size} Results found"
     }
-} // <-- Ends SearchResultsActivity
+}

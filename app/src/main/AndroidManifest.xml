@@ -83,6 +83,13 @@
             android:name=".HostProfileActivity"
             android:exported="false" />
 
-    </application>
+        <activity
+            android:name=".HostReportsActivity"
+            android:exported="false" />
 
+        <activity
+            android:name=".NotificationsActivity"
+            android:exported="false" />
+
+    </application>
 </manifest>

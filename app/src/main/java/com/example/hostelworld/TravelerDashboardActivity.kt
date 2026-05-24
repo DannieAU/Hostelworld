@@ -69,7 +69,8 @@ class TravelerDashboardActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
                 R.id.nav_events -> {
-                    val intent = Intent(this@TravelerDashboardActivity, EventsActivity::class.java)
+                    // --- THIS IS THE FIX! NOW ROUTES TO THE NEW SCREEN ---
+                    val intent = Intent(this@TravelerDashboardActivity, NotificationsActivity::class.java)
                     startActivity(intent)
                 }
                 R.id.nav_profile -> {
@@ -126,7 +127,6 @@ class TravelerDashboardActivity : AppCompatActivity() {
                         db.collection("properties").document(propertyId).get()
                             .addOnSuccessListener { propDoc ->
 
-                                // --- NEW: ONLY ADD TO UI IF THE PROPERTY STILL EXISTS ---
                                 if (propDoc.exists()) {
                                     val propName = propDoc.getString("name") ?: "Unknown Property"
                                     tempTrips.add(BookedTrip(bookingId, propertyId, propName, totalCost, status, dates, policy))

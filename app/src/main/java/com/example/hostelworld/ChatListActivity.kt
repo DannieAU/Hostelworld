@@ -38,11 +38,11 @@ class ChatListActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_chat -> {
-                    startActivity(android.content.Intent(this, ChatListActivity::class.java))
-                    finish()
+                    // Already on the Chat screen, do nothing!
                 }
                 R.id.nav_events -> {
-                    startActivity(android.content.Intent(this, EventsActivity::class.java))
+                    // --- FIXED: NOW POINTS TO THE NEW NOTIFICATIONS SCREEN! ---
+                    startActivity(android.content.Intent(this, NotificationsActivity::class.java))
                     finish()
                 }
                 R.id.nav_profile -> {

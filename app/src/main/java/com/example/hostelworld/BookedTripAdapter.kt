@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class BookedTripAdapter(private val trips: MutableList<BookedTrip>) : RecyclerView.Adapter<BookedTripAdapter.TripViewHolder>() {
@@ -33,7 +34,7 @@ class BookedTripAdapter(private val trips: MutableList<BookedTrip>) : RecyclerVi
         holder.tvPolicy.text = "Policy: ${trip.policy}"
         holder.tvTotalCost.text = "Total: $${trip.totalCost}"
 
-        // --- FR-11: ENFORCE CANCELLATION RULES ---
+        // --- ENFORCE CANCELLATION RULES ---
         if (trip.policy == "Non-Refundable") {
             // Turn the button gray and disable the delete function
             holder.btnCancel.setBackgroundColor(Color.parseColor("#9E9E9E"))
@@ -50,15 +51,32 @@ class BookedTripAdapter(private val trips: MutableList<BookedTrip>) : RecyclerVi
             holder.btnCancel.setOnClickListener {
                 val context = holder.itemView.context
                 val db = FirebaseFirestore.getInstance()
+                val auth = FirebaseAuth.getInstance() // NEW: Get the Auth instance
 
                 AlertDialog.Builder(context)
                     .setTitle("Cancel Reservation")
                     .setMessage("Are you sure you want to cancel this booking? This action cannot be undone.")
                     .setPositiveButton("Yes, Cancel") { dialog, _ ->
+
+                        // 1. Delete the booking from the database
                         db.collection("bookings").document(trip.bookingId)
                             .delete()
                             .addOnSuccessListener {
                                 Toast.makeText(context, "Booking Cancelled Successfully", Toast.LENGTH_SHORT).show()
+
+                                // --- NEW: FIRE OFF A CANCELLATION NOTIFICATION ---
+                                val currentUserId = auth.currentUser?.uid
+                                if (currentUserId != null) {
+                                    val notificationData = hashMapOf(
+                                        "travelerUid" to currentUserId,
+                                        "title" to "Booking Cancelled 🚫",
+                                        "message" to "Your reservation at ${trip.propertyName} has been successfully cancelled.",
+                                        "timestamp" to System.currentTimeMillis()
+                                    )
+                                    db.collection("notifications").add(notificationData)
+                                }
+
+                                // 2. Remove it from the screen
                                 val currentPosition = holder.adapterPosition
                                 if (currentPosition != RecyclerView.NO_POSITION) {
                                     trips.removeAt(currentPosition)

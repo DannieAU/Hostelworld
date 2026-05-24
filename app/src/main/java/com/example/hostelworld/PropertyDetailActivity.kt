@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -30,7 +32,6 @@ class PropertyDetailActivity : AppCompatActivity() {
         val btnBack = findViewById<androidx.cardview.widget.CardView>(R.id.btnBack)
         btnBack.setOnClickListener { finish() }
 
-        // 1. Retrieve Data passed from the Adapter
         val propId = intent.getStringExtra("PROP_ID") ?: ""
         val propName = intent.getStringExtra("PROP_NAME") ?: "Unknown"
         val propPrice = intent.getDoubleExtra("PROP_PRICE", 0.0)
@@ -38,9 +39,8 @@ class PropertyDetailActivity : AppCompatActivity() {
         val propImageId = intent.getIntExtra("PROP_IMAGE", R.drawable.circle_placeholder)
         val userRole = intent.getStringExtra("USER_ROLE") ?: "TRAVELER"
 
-        // 2. Fetch max beds & cancellation policy and update UI
         var maxAvailableBeds = 1
-        var cancellationPolicy = "Non-Refundable" // Default fallback
+        var cancellationPolicy = "Non-Refundable"
 
         if (propId.isNotEmpty()) {
             db.collection("properties").document(propId).get()
@@ -52,14 +52,12 @@ class PropertyDetailActivity : AppCompatActivity() {
                         val tvBeds = findViewById<TextView>(R.id.tvDetailBeds)
                         tvBeds?.text = "🛏️ $maxAvailableBeds Beds Available"
 
-                        // NEW: Show the Cancellation Policy on the screen!
                         val tvPolicy = findViewById<TextView>(R.id.tvDetailCancelPolicy)
                         tvPolicy?.text = "Cancellation Rule: $cancellationPolicy"
                     }
                 }
         }
 
-        // 3. Populate Views
         findViewById<TextView>(R.id.tvDetailName).text = propName
         findViewById<TextView>(R.id.tvDetailRating).text = "⭐ $propRating"
         findViewById<TextView>(R.id.tvDetailPrice).text = "$$propPrice / night"
@@ -78,8 +76,6 @@ class PropertyDetailActivity : AppCompatActivity() {
             }
         } else {
             btnAction.text = "Book Now"
-
-            // DOUBLE BOOKING PREVENTION FLOW
             btnAction.setOnClickListener {
                 val builder = MaterialDatePicker.Builder.dateRangePicker()
                 builder.setTitleText("Select Check-in and Check-out Dates")
@@ -88,8 +84,6 @@ class PropertyDetailActivity : AppCompatActivity() {
                 datePicker.addOnPositiveButtonClickListener { selection ->
                     val newCheckIn = selection.first ?: return@addOnPositiveButtonClickListener
                     val newCheckOut = selection.second ?: return@addOnPositiveButtonClickListener
-
-                    // Pause and check Firebase for date overlaps, PASSING POLICY!
                     checkAvailabilityAndProceed(newCheckIn, newCheckOut, propId, propName, propPrice, maxAvailableBeds, cancellationPolicy)
                 }
                 datePicker.show(supportFragmentManager, "DATE_PICKER")
@@ -97,7 +91,6 @@ class PropertyDetailActivity : AppCompatActivity() {
         }
     }
 
-    // --- OVERLAP MATH LOGIC ---
     private fun checkAvailabilityAndProceed(newCheckIn: Long, newCheckOut: Long, propId: String, propName: String, propPrice: Double, maxBeds: Int, cancellationPolicy: String) {
         db.collection("bookings")
             .whereEqualTo("propertyId", propId)
@@ -118,13 +111,10 @@ class PropertyDetailActivity : AppCompatActivity() {
                             isAvailable = false
                             break
                         }
-                    } catch (e: Exception) {
-                        // Ignores old corrupted mock data safely
-                    }
+                    } catch (e: Exception) {}
                 }
 
                 if (isAvailable) {
-                    // Dates are clear! Show the room selection popup.
                     showRoomSelectionDialog(newCheckIn, newCheckOut, propId, propName, propPrice, maxBeds, cancellationPolicy)
                 } else {
                     Toast.makeText(this, "Sorry! This property is already booked for these dates.", Toast.LENGTH_LONG).show()
@@ -135,7 +125,6 @@ class PropertyDetailActivity : AppCompatActivity() {
             }
     }
 
-    // --- ROOM SELECTION & PAYMENT LOGIC ---
     private fun showRoomSelectionDialog(checkInTime: Long, checkOutTime: Long, propId: String, propName: String, propPrice: Double, maxAvailableBeds: Int, cancellationPolicy: String) {
         val dormPrice = propPrice
         val privatePrice = propPrice * 2.5
@@ -161,30 +150,15 @@ class PropertyDetailActivity : AppCompatActivity() {
         }
 
         roomView.findViewById<Button>(R.id.btnDormPlus).setOnClickListener {
-            if ((dormCount + privateCount) < maxAvailableBeds) {
-                dormCount++
-                updateRoomTotal()
-            } else {
-                Toast.makeText(this, "Only $maxAvailableBeds beds available!", Toast.LENGTH_SHORT).show()
-            }
+            if ((dormCount + privateCount) < maxAvailableBeds) { dormCount++; updateRoomTotal() }
+            else { Toast.makeText(this, "Only $maxAvailableBeds beds available!", Toast.LENGTH_SHORT).show() }
         }
-
-        roomView.findViewById<Button>(R.id.btnDormMinus).setOnClickListener {
-            if (dormCount > 0) dormCount--; updateRoomTotal()
-        }
-
+        roomView.findViewById<Button>(R.id.btnDormMinus).setOnClickListener { if (dormCount > 0) dormCount--; updateRoomTotal() }
         roomView.findViewById<Button>(R.id.btnPrivatePlus).setOnClickListener {
-            if ((dormCount + privateCount) < maxAvailableBeds) {
-                privateCount++
-                updateRoomTotal()
-            } else {
-                Toast.makeText(this, "Only $maxAvailableBeds beds available!", Toast.LENGTH_SHORT).show()
-            }
+            if ((dormCount + privateCount) < maxAvailableBeds) { privateCount++; updateRoomTotal() }
+            else { Toast.makeText(this, "Only $maxAvailableBeds beds available!", Toast.LENGTH_SHORT).show() }
         }
-
-        roomView.findViewById<Button>(R.id.btnPrivateMinus).setOnClickListener {
-            if (privateCount > 0) privateCount--; updateRoomTotal()
-        }
+        roomView.findViewById<Button>(R.id.btnPrivateMinus).setOnClickListener { if (privateCount > 0) privateCount--; updateRoomTotal() }
 
         val roomDialog = AlertDialog.Builder(this).setView(roomView).create()
 
@@ -198,6 +172,9 @@ class PropertyDetailActivity : AppCompatActivity() {
             val btnConfirmPayment = paymentView.findViewById<Button>(R.id.btnConfirmPayment)
             val etPromo = paymentView.findViewById<EditText>(R.id.etPromoCode)
             val btnApply = paymentView.findViewById<Button>(R.id.btnApplyPromo)
+
+            // Extract the Payment Method
+            val rgPayment = paymentView.findViewById<RadioGroup>(R.id.rgPaymentMethod)
 
             tvPaymentPropName.text = "Booking: $propName\nTotal: $$finalTotal"
 
@@ -221,6 +198,11 @@ class PropertyDetailActivity : AppCompatActivity() {
                 val auth = FirebaseAuth.getInstance()
                 val currentUserId = auth.currentUser?.uid
 
+                // Find which radio button was clicked
+                val selectedPaymentId = rgPayment.checkedRadioButtonId
+                val rbSelected = paymentView.findViewById<RadioButton>(selectedPaymentId)
+                val paymentModeStr = rbSelected?.text?.toString() ?: "Credit Card"
+
                 if (currentUserId != null) {
                     db.collection("properties").document(propId).get()
                         .addOnSuccessListener { propDoc ->
@@ -230,6 +212,10 @@ class PropertyDetailActivity : AppCompatActivity() {
                             val checkInStr = sdf.format(Date(checkInTime))
                             val checkOutStr = sdf.format(Date(checkOutTime))
 
+                            val mockRef = "HW" + (100000..999999).random()
+                            val currentTime = System.currentTimeMillis()
+
+                            // --- SAVING THE FULL FR-08 & FR-13 PAYLOAD ---
                             val bookingData = hashMapOf(
                                 "propertyId" to propId,
                                 "travelerUid" to currentUserId,
@@ -237,25 +223,33 @@ class PropertyDetailActivity : AppCompatActivity() {
                                 "totalCost" to finalTotal,
                                 "checkInDate" to checkInStr,
                                 "checkOutDate" to checkOutStr,
-                                "cancellationPolicy" to cancellationPolicy, // <-- SAVING POLICY TO RESERVATION
-                                "status" to "Confirmed"
+                                "cancellationPolicy" to cancellationPolicy,
+                                "status" to "Confirmed",
+                                "bookingRef" to mockRef,
+                                "paymentMode" to paymentModeStr,
+                                "timestamp" to currentTime
                             )
 
-                            db.collection("bookings").add(bookingData)
-                                .addOnSuccessListener {
-                                    val mockRef = "HW" + (100000..999999).random()
-                                    AlertDialog.Builder(this@PropertyDetailActivity)
-                                        .setTitle("Booking Confirmed!")
-                                        .setMessage("You are set for $propName!\n\nDates: $checkInStr to $checkOutStr\nPolicy: $cancellationPolicy\n\nCheck your Dashboard to view this trip.")
-                                        .setPositiveButton("Awesome") { dialog, _ ->
-                                            dialog.dismiss()
-                                            finish()
-                                        }
-                                        .setCancelable(false).show()
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(this@PropertyDetailActivity, "Failed to book: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
+                            db.collection("bookings").add(bookingData).addOnSuccessListener {
+
+                                // Create the Notification receipt for FR-08
+                                val notificationData = hashMapOf(
+                                    "travelerUid" to currentUserId,
+                                    "title" to "Booking Confirmed! \uD83C\uDF89",
+                                    "message" to "Your trip to $propName is confirmed. Ref: $mockRef. An email receipt has been sent.",
+                                    "timestamp" to currentTime
+                                )
+                                db.collection("notifications").add(notificationData)
+
+                                AlertDialog.Builder(this@PropertyDetailActivity)
+                                    .setTitle("Booking Confirmed!")
+                                    .setMessage("You are set for $propName!\n\nRef: $mockRef\nDates: $checkInStr to $checkOutStr\nPolicy: $cancellationPolicy\n\nCheck your Notifications for your receipt.")
+                                    .setPositiveButton("Awesome") { dialog, _ ->
+                                        dialog.dismiss()
+                                        finish()
+                                    }
+                                    .setCancelable(false).show()
+                            }
                         }
                 }
             }

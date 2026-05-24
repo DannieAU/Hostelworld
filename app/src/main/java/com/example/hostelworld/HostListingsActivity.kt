@@ -60,7 +60,10 @@ class HostListingsActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_host_listings -> { }
-                R.id.nav_host_reports -> { }
+                R.id.nav_host_reports -> {
+                    startActivity(Intent(this@HostListingsActivity, HostReportsActivity::class.java))
+                    finish()
+                }
                 R.id.nav_host_profile -> {
                     val intent = Intent(this, HostProfileActivity::class.java)
                     intent.putExtra("USER_NAME", intent.getStringExtra("USER_NAME"))

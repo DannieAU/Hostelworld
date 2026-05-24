@@ -25,7 +25,6 @@ class SearchResultsActivity : AppCompatActivity() {
     private var allProperties = mutableListOf<Property>()
     private var currentFilteredList = listOf<Property>()
 
-    // NEW: Variable to track how many guests the user is searching for (Default is 1)
     private var selectedGuestCount = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +52,6 @@ class SearchResultsActivity : AppCompatActivity() {
 
         btnFilter.setOnClickListener { showFilterDialog() }
 
-        // Navigation Bar Logic
         val userName = intent.getStringExtra("USER_NAME")
         val userEmail = intent.getStringExtra("USER_EMAIL")
 
@@ -72,7 +70,8 @@ class SearchResultsActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_events -> {
-                    startActivity(android.content.Intent(this, EventsActivity::class.java))
+                    // --- FIXED: NOW POINTS TO THE NEW NOTIFICATIONS SCREEN! ---
+                    startActivity(android.content.Intent(this, NotificationsActivity::class.java))
                     finish()
                 }
                 R.id.nav_profile -> {
@@ -101,7 +100,6 @@ class SearchResultsActivity : AppCompatActivity() {
             datePicker.show(supportFragmentManager, "DATE_RANGE_PICKER")
         }
 
-        // --- NEW: MAKE GUESTS INTERACTIVE & TRIGGER FILTER ---
         val tvSearchGuests = findViewById<TextView>(R.id.tvSearchGuests)
         tvSearchGuests.setOnClickListener {
             val guestOptions = arrayOf("1 Guest", "2 Guests", "3 Guests", "4 Guests", "5+ Guests")
@@ -109,13 +107,8 @@ class SearchResultsActivity : AppCompatActivity() {
                 .setTitle("Number of Guests")
                 .setItems(guestOptions) { dialog, which ->
                     tvSearchGuests.text = guestOptions[which]
-
-                    // Extract the number (which is the index 0-4. So index 0 = 1 guest)
                     selectedGuestCount = which + 1
-
-                    // Instantly re-filter the list when the user selects a new guest count!
                     applyFilters(200.0, 0.0)
-
                     dialog.dismiss()
                 }
                 .show()
@@ -132,8 +125,6 @@ class SearchResultsActivity : AppCompatActivity() {
                     val name = doc.getString("name") ?: "Unknown"
                     val location = doc.getString("location") ?: "Unknown Location"
                     val price = doc.getDouble("pricePerNight") ?: 0.0
-
-                    // GRAB THE BEDS FROM FIREBASE
                     val beds = doc.getDouble("availableBeds")?.toInt() ?: 1
 
                     val prop = Property(
@@ -183,8 +174,6 @@ class SearchResultsActivity : AppCompatActivity() {
                     property.name.lowercase().contains(searchQuery)
             val matchesPrice = property.pricePerNight <= maxPrice
             val matchesRating = property.rating >= minRating
-
-            // --- NEW: ENSURE THE PROPERTY HAS ENOUGH BEDS FOR THE SEARCH! ---
             val matchesGuests = property.availableBeds >= selectedGuestCount
 
             matchesSearch && matchesPrice && matchesRating && matchesGuests

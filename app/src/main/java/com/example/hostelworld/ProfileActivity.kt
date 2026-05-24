@@ -14,7 +14,6 @@ class ProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
-        // 1. Connect UI Elements
         val tvProfileName = findViewById<TextView>(R.id.tvProfileName)
         val tvProfileEmail = findViewById<TextView>(R.id.tvProfileEmail)
         val btnLogout = findViewById<MaterialButton>(R.id.btnLogout)
@@ -25,12 +24,10 @@ class ProfileActivity : AppCompatActivity() {
         val llDistance = findViewById<LinearLayout>(R.id.llDistance)
         val tvDistanceValue = findViewById<TextView>(R.id.tvDistanceValue)
 
-        // 2. Retrieve Data passed from Dashboards
         val userName = intent.getStringExtra("USER_NAME")
         val userEmail = intent.getStringExtra("USER_EMAIL")
         val userRole = intent.getStringExtra("USER_ROLE")
 
-        // 3. Update UI text with active user details
         if (!userName.isNullOrEmpty()) {
             tvProfileName.text = userName
         }
@@ -38,7 +35,6 @@ class ProfileActivity : AppCompatActivity() {
             tvProfileEmail.text = "Logged in as: $userEmail"
         }
 
-        // 4. Setup correct bottom navigation menu based on role
         if (userRole == "HOST") {
             bottomNavProfile.menu.clear()
             bottomNavProfile.inflateMenu(R.menu.host_bottom_nav_menu)
@@ -47,7 +43,6 @@ class ProfileActivity : AppCompatActivity() {
             bottomNavProfile.selectedItemId = R.id.nav_profile
         }
 
-        // 5. Handle Log Out
         btnLogout.setOnClickListener {
             val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -55,7 +50,6 @@ class ProfileActivity : AppCompatActivity() {
             finish()
         }
 
-        // 6. Settings Interaction Logic - Currency
         val currencies = arrayOf("USD ($)", "EUR (€)", "GBP (£)", "PHP (₱)", "JPY (¥)")
         var selectedCurrencyIndex = 0
 
@@ -70,7 +64,6 @@ class ProfileActivity : AppCompatActivity() {
             builder.show()
         }
 
-        // 7. Settings Interaction Logic - Distance
         val distances = arrayOf("Kilometers (Km)", "Miles (Mi)")
         var selectedDistanceIndex = 0
 
@@ -85,7 +78,6 @@ class ProfileActivity : AppCompatActivity() {
             builder.show()
         }
 
-        // 8. Bottom Navigation Click Listener
         bottomNavProfile.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_explore -> {
@@ -101,7 +93,8 @@ class ProfileActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_events -> {
-                    startActivity(android.content.Intent(this, EventsActivity::class.java))
+                    // --- FIXED: NOW POINTS TO THE NEW NOTIFICATIONS SCREEN! ---
+                    startActivity(android.content.Intent(this, NotificationsActivity::class.java))
                     finish()
                 }
                 R.id.nav_profile -> {
@@ -116,15 +109,13 @@ class ProfileActivity : AppCompatActivity() {
             true
         }
 
-        // Setup FR-14: Open Edit Screen
         val btnEdit = findViewById<android.widget.Button>(R.id.btnGoToEdit)
         btnEdit.setOnClickListener {
             val intent = android.content.Intent(this, EditProfileActivity::class.java)
             startActivity(intent)
         }
-    } // <-- Ends onCreate
+    }
 
-    // Refresh the text every time you look at the screen!
     override fun onResume() {
         super.onResume()
         val prefs = getSharedPreferences("UserProfile", MODE_PRIVATE)
@@ -132,8 +123,7 @@ class ProfileActivity : AppCompatActivity() {
         val tvBio = findViewById<TextView>(R.id.tvDisplayBio)
         val tvInterests = findViewById<TextView>(R.id.tvDisplayInterests)
 
-        // Grab the saved text, or show a default message if it's empty
         tvBio.text = prefs.getString("BIO", "No bio added yet.")
         tvInterests.text = prefs.getString("INTERESTS", "No interests added yet.")
     }
-} // <-- Ends ProfileActivity
+}

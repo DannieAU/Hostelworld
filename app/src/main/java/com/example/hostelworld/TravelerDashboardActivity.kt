@@ -11,6 +11,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+// --- NEW: ADDED imageResId TO THE DATA CLASS ---
 data class BookedTrip(
     val bookingId: String,
     val propertyId: String,
@@ -18,7 +19,8 @@ data class BookedTrip(
     val totalCost: Double,
     val status: String,
     val dates: String,
-    val policy: String
+    val policy: String,
+    val imageResId: Int
 )
 
 class TravelerDashboardActivity : AppCompatActivity() {
@@ -69,7 +71,6 @@ class TravelerDashboardActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
                 R.id.nav_events -> {
-                    // --- THIS IS THE FIX! NOW ROUTES TO THE NEW SCREEN ---
                     val intent = Intent(this@TravelerDashboardActivity, NotificationsActivity::class.java)
                     startActivity(intent)
                 }
@@ -118,6 +119,16 @@ class TravelerDashboardActivity : AppCompatActivity() {
                     val status = doc.getString("status") ?: "Confirmed"
                     val bookingId = doc.id
 
+                    if (status == "Reviewed") {
+                        fetchCount++
+                        if (fetchCount == totalDocs) {
+                            bookedTripsList.clear()
+                            bookedTripsList.addAll(tempTrips)
+                            adapter.notifyDataSetChanged()
+                        }
+                        continue
+                    }
+
                     val checkIn = doc.getString("checkInDate") ?: ""
                     val checkOut = doc.getString("checkOutDate") ?: ""
                     val policy = doc.getString("cancellationPolicy") ?: "Non-Refundable"
@@ -129,7 +140,11 @@ class TravelerDashboardActivity : AppCompatActivity() {
 
                                 if (propDoc.exists()) {
                                     val propName = propDoc.getString("name") ?: "Unknown Property"
-                                    tempTrips.add(BookedTrip(bookingId, propertyId, propName, totalCost, status, dates, policy))
+
+                                    // --- NEW: ASSIGN A DEFAULT IMAGE RESOURCE ---
+                                    val imageRes = R.drawable.room_1
+
+                                    tempTrips.add(BookedTrip(bookingId, propertyId, propName, totalCost, status, dates, policy, imageRes))
                                 }
 
                                 fetchCount++

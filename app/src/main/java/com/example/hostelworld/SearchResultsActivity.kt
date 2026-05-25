@@ -24,7 +24,6 @@ class SearchResultsActivity : AppCompatActivity() {
 
     private var allProperties = mutableListOf<Property>()
     private var currentFilteredList = listOf<Property>()
-
     private var selectedGuestCount = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,7 +69,6 @@ class SearchResultsActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_events -> {
-                    // --- FIXED: NOW POINTS TO THE NEW NOTIFICATIONS SCREEN! ---
                     startActivity(android.content.Intent(this, NotificationsActivity::class.java))
                     finish()
                 }
@@ -127,8 +125,11 @@ class SearchResultsActivity : AppCompatActivity() {
                     val price = doc.getDouble("pricePerNight") ?: 0.0
                     val beds = doc.getDouble("availableBeds")?.toInt() ?: 1
 
+                    // SECURE FETCH: Defeats the Firebase Number Formatting crash
+                    val dynamicRating = (doc.get("rating") as? Number)?.toDouble() ?: 5.0
+
                     val prop = Property(
-                        id, name, location, "Hostel", 5.0, price, listOf("WiFi"), R.drawable.room_1, beds
+                        id, name, location, "Hostel", dynamicRating, price, listOf("WiFi"), R.drawable.room_1, beds
                     )
                     allProperties.add(prop)
                 }

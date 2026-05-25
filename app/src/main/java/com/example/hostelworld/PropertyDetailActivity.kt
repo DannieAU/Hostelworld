@@ -1,17 +1,23 @@
 package com.example.hostelworld
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,9 +25,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+data class PropertyReview(val rating: Double, val feedback: String, val dateStr: String, val timestamp: Long)
+
 class PropertyDetailActivity : AppCompatActivity() {
 
     private lateinit var db: FirebaseFirestore
+    private val reviewList = mutableListOf<PropertyReview>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +44,7 @@ class PropertyDetailActivity : AppCompatActivity() {
         val propId = intent.getStringExtra("PROP_ID") ?: ""
         val propName = intent.getStringExtra("PROP_NAME") ?: "Unknown"
         val propPrice = intent.getDoubleExtra("PROP_PRICE", 0.0)
-        val propRating = intent.getDoubleExtra("PROP_RATING", 0.0)
+        var propRating = intent.getDoubleExtra("PROP_RATING", 5.0)
         val propImageId = intent.getIntExtra("PROP_IMAGE", R.drawable.circle_placeholder)
         val userRole = intent.getStringExtra("USER_ROLE") ?: "TRAVELER"
 
@@ -48,14 +57,54 @@ class PropertyDetailActivity : AppCompatActivity() {
                     if (doc.exists()) {
                         maxAvailableBeds = doc.getDouble("availableBeds")?.toInt() ?: 1
                         cancellationPolicy = doc.getString("cancellationPolicy") ?: "Non-Refundable"
+                        propRating = (doc.get("rating") as? Number)?.toDouble() ?: 5.0
 
-                        val tvBeds = findViewById<TextView>(R.id.tvDetailBeds)
-                        tvBeds?.text = "🛏️ $maxAvailableBeds Beds Available"
+                        // --- NEW: FETCH THE LOCATION HOST TYPED IN ---
+                        val locationStr = doc.getString("location") ?: "Cebu City, Philippines"
 
-                        val tvPolicy = findViewById<TextView>(R.id.tvDetailCancelPolicy)
-                        tvPolicy?.text = "Cancellation Rule: $cancellationPolicy"
+                        findViewById<TextView>(R.id.tvDetailBeds)?.text = "🛏️ $maxAvailableBeds Beds Available"
+                        findViewById<TextView>(R.id.tvDetailCancelPolicy)?.text = "Cancellation Rule: $cancellationPolicy"
+                        findViewById<TextView>(R.id.tvDetailRating)?.text = "⭐ $propRating"
+
+                        // --- NEW: WIRE UP THE MAP CLICK LISTENER ---
+                        val ivDetailMap = findViewById<ImageView>(R.id.ivDetailMap)
+                        ivDetailMap.setOnClickListener {
+                            // Create a URI that searches Google Maps for the address
+                            val gmmIntentUri = Uri.parse("geo:0,0?q=${Uri.encode(locationStr)}")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                            mapIntent.setPackage("com.google.android.apps.maps")
+
+                            // Check if they have the Google Maps app installed
+                            if (mapIntent.resolveActivity(packageManager) != null) {
+                                startActivity(mapIntent)
+                            } else {
+                                // Fallback: Open it in their web browser if they don't have the app!
+                                val browserUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(locationStr)}")
+                                startActivity(Intent(Intent.ACTION_VIEW, browserUri))
+                            }
+                        }
                     }
                 }
+
+            val rvReviews = findViewById<RecyclerView>(R.id.rvDetailReviews)
+            if (rvReviews != null) {
+                rvReviews.layoutManager = LinearLayoutManager(this)
+                val reviewAdapter = ReviewAdapter(reviewList)
+                rvReviews.adapter = reviewAdapter
+
+                db.collection("reviews").whereEqualTo("propertyId", propId).get()
+                    .addOnSuccessListener { docs ->
+                        val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                        for (doc in docs) {
+                            val rating = (doc.get("rating") as? Number)?.toDouble() ?: 5.0
+                            val feedback = doc.getString("feedback") ?: ""
+                            val time = doc.getLong("timestamp") ?: 0L
+                            reviewList.add(PropertyReview(rating, feedback, sdf.format(Date(time)), time))
+                        }
+                        reviewList.sortByDescending { it.timestamp }
+                        reviewAdapter.notifyDataSetChanged()
+                    }
+            }
         }
 
         findViewById<TextView>(R.id.tvDetailName).text = propName
@@ -92,9 +141,7 @@ class PropertyDetailActivity : AppCompatActivity() {
     }
 
     private fun checkAvailabilityAndProceed(newCheckIn: Long, newCheckOut: Long, propId: String, propName: String, propPrice: Double, maxBeds: Int, cancellationPolicy: String) {
-        db.collection("bookings")
-            .whereEqualTo("propertyId", propId)
-            .get()
+        db.collection("bookings").whereEqualTo("propertyId", propId).get()
             .addOnSuccessListener { documents ->
                 var isAvailable = true
                 val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
@@ -106,7 +153,6 @@ class PropertyDetailActivity : AppCompatActivity() {
                     try {
                         val existingIn = sdf.parse(existingInStr)?.time ?: 0L
                         val existingOut = sdf.parse(existingOutStr)?.time ?: 0L
-
                         if (newCheckIn < existingOut && newCheckOut > existingIn) {
                             isAvailable = false
                             break
@@ -119,9 +165,6 @@ class PropertyDetailActivity : AppCompatActivity() {
                 } else {
                     Toast.makeText(this, "Sorry! This property is already booked for these dates.", Toast.LENGTH_LONG).show()
                 }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to check dates: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 
@@ -151,12 +194,10 @@ class PropertyDetailActivity : AppCompatActivity() {
 
         roomView.findViewById<Button>(R.id.btnDormPlus).setOnClickListener {
             if ((dormCount + privateCount) < maxAvailableBeds) { dormCount++; updateRoomTotal() }
-            else { Toast.makeText(this, "Only $maxAvailableBeds beds available!", Toast.LENGTH_SHORT).show() }
         }
         roomView.findViewById<Button>(R.id.btnDormMinus).setOnClickListener { if (dormCount > 0) dormCount--; updateRoomTotal() }
         roomView.findViewById<Button>(R.id.btnPrivatePlus).setOnClickListener {
             if ((dormCount + privateCount) < maxAvailableBeds) { privateCount++; updateRoomTotal() }
-            else { Toast.makeText(this, "Only $maxAvailableBeds beds available!", Toast.LENGTH_SHORT).show() }
         }
         roomView.findViewById<Button>(R.id.btnPrivateMinus).setOnClickListener { if (privateCount > 0) privateCount--; updateRoomTotal() }
 
@@ -172,8 +213,6 @@ class PropertyDetailActivity : AppCompatActivity() {
             val btnConfirmPayment = paymentView.findViewById<Button>(R.id.btnConfirmPayment)
             val etPromo = paymentView.findViewById<EditText>(R.id.etPromoCode)
             val btnApply = paymentView.findViewById<Button>(R.id.btnApplyPromo)
-
-            // Extract the Payment Method
             val rgPayment = paymentView.findViewById<RadioGroup>(R.id.rgPaymentMethod)
 
             tvPaymentPropName.text = "Booking: $propName\nTotal: $$finalTotal"
@@ -185,9 +224,6 @@ class PropertyDetailActivity : AppCompatActivity() {
                     tvPaymentPropName.text = "Booking: $propName\nTotal: $$finalTotal (20% OFF Applied!)"
                     tvPaymentPropName.setTextColor(android.graphics.Color.parseColor("#4CAF50"))
                     discountApplied = true
-                    Toast.makeText(this, "Promo Code Applied!", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Invalid or already applied.", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -195,10 +231,8 @@ class PropertyDetailActivity : AppCompatActivity() {
 
             btnConfirmPayment.setOnClickListener {
                 paymentDialog.dismiss()
-                val auth = FirebaseAuth.getInstance()
-                val currentUserId = auth.currentUser?.uid
+                val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
 
-                // Find which radio button was clicked
                 val selectedPaymentId = rgPayment.checkedRadioButtonId
                 val rbSelected = paymentView.findViewById<RadioButton>(selectedPaymentId)
                 val paymentModeStr = rbSelected?.text?.toString() ?: "Credit Card"
@@ -215,7 +249,6 @@ class PropertyDetailActivity : AppCompatActivity() {
                             val mockRef = "HW" + (100000..999999).random()
                             val currentTime = System.currentTimeMillis()
 
-                            // --- SAVING THE FULL FR-08 & FR-13 PAYLOAD ---
                             val bookingData = hashMapOf(
                                 "propertyId" to propId,
                                 "travelerUid" to currentUserId,
@@ -232,7 +265,6 @@ class PropertyDetailActivity : AppCompatActivity() {
 
                             db.collection("bookings").add(bookingData).addOnSuccessListener {
 
-                                // Create the Notification receipt for FR-08
                                 val notificationData = hashMapOf(
                                     "travelerUid" to currentUserId,
                                     "title" to "Booking Confirmed! \uD83C\uDF89",
@@ -243,7 +275,7 @@ class PropertyDetailActivity : AppCompatActivity() {
 
                                 AlertDialog.Builder(this@PropertyDetailActivity)
                                     .setTitle("Booking Confirmed!")
-                                    .setMessage("You are set for $propName!\n\nRef: $mockRef\nDates: $checkInStr to $checkOutStr\nPolicy: $cancellationPolicy\n\nCheck your Notifications for your receipt.")
+                                    .setMessage("You are set for $propName!\n\nRef: $mockRef\nDates: $checkInStr to $checkOutStr\nPolicy: $cancellationPolicy")
                                     .setPositiveButton("Awesome") { dialog, _ ->
                                         dialog.dismiss()
                                         finish()
@@ -256,5 +288,24 @@ class PropertyDetailActivity : AppCompatActivity() {
             paymentDialog.show()
         }
         roomDialog.show()
+    }
+
+    inner class ReviewAdapter(private val reviews: List<PropertyReview>) : RecyclerView.Adapter<ReviewAdapter.RevViewHolder>() {
+        inner class RevViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val rb: RatingBar = view.findViewById(R.id.rbItemReview)
+            val tvDate: TextView = view.findViewById(R.id.tvItemReviewDate)
+            val tvText: TextView = view.findViewById(R.id.tvItemReviewText)
+        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RevViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_review, parent, false)
+            return RevViewHolder(view)
+        }
+        override fun onBindViewHolder(holder: RevViewHolder, position: Int) {
+            val rev = reviews[position]
+            holder.rb.rating = rev.rating.toFloat()
+            holder.tvDate.text = "Verified Traveler • ${rev.dateStr}"
+            holder.tvText.text = rev.feedback
+        }
+        override fun getItemCount() = reviews.size
     }
 }

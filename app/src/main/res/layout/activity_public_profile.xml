@@ -3,74 +3,59 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#F5F5F5"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbarPublicProfile"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#7C3AED"
-        app:title="Traveler Profile"
-        app:titleTextColor="#FFFFFF" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="24dp">
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/ivPublicProfilePic"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:scaleType="centerCrop"
+    <androidx.cardview.widget.CardView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="32dp"
+        app:cardCornerRadius="60dp"
+        app:cardElevation="4dp">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:src="@drawable/circle_placeholder"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize50Percent" />
+            android:scaleType="centerCrop"/>
+    </androidx.cardview.widget.CardView>
 
-        <TextView
-            android:id="@+id/tvPublicName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Traveler Name"
-            android:textColor="#000000"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvPublicProfileName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Traveler Name"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:layout_marginTop="16dp"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="About Me"
-            android:textColor="#7C3AED"
-            android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvPublicProfileStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scanning itineraries..."
+        android:textSize="16sp"
+        android:textColor="#757575"
+        android:layout_marginTop="12dp"
+        android:textAlignment="center"/>
 
-        <TextView
-            android:id="@+id/tvPublicBio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Bio goes here..."
-            android:textColor="#555555"
-            android:textSize="16sp" />
+    <Button
+        android:id="@+id/btnPublicProfileChat"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:text="Checking Connection..."
+        android:backgroundTint="#9E9E9E"
+        android:enabled="false"
+        android:layout_marginTop="40dp"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Travel Interests"
-            android:textColor="#7C3AED"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tvPublicInterests"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Interests go here..."
-            android:textColor="#555555"
-            android:textSize="16sp" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/btnPublicProfileBack"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:text="Go Back"
+        android:backgroundTint="#E0E0E0"
+        android:textColor="#000000"
+        android:layout_marginTop="12dp"/>
 </LinearLayout>

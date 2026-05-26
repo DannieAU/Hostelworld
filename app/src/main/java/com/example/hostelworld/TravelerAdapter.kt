@@ -8,11 +8,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class TravelerAdapter(private val travelers: List<Traveler>) : RecyclerView.Adapter<TravelerAdapter.TravelerViewHolder>() {
+// NEW: A data class to hold real Firebase users!
+data class RealTraveler(val uid: String, val name: String)
 
-    class TravelerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val ivImage: ImageView = view.findViewById(R.id.ivBuddyImage)
-        val tvName: TextView = view.findViewById(R.id.tvBuddyName)
+class TravelerAdapter(private val travelers: List<RealTraveler>) : RecyclerView.Adapter<TravelerAdapter.TravelerViewHolder>() {
+
+    inner class TravelerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val ivAvatar: ImageView = view.findViewById(R.id.ivTravelerAvatar)
+        val tvName: TextView = view.findViewById(R.id.tvTravelerName)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TravelerViewHolder {
@@ -23,16 +26,14 @@ class TravelerAdapter(private val travelers: List<Traveler>) : RecyclerView.Adap
     override fun onBindViewHolder(holder: TravelerViewHolder, position: Int) {
         val traveler = travelers[position]
         holder.tvName.text = traveler.name
-        holder.ivImage.setImageResource(traveler.imageResId)
 
-        // When clicked, open their public profile!
+        // When you click a face, pass their exact Firebase UID to the profile screen
         holder.itemView.setOnClickListener {
-            val intent = Intent(holder.itemView.context, PublicProfileActivity::class.java)
-            intent.putExtra("TRAVELER_NAME", traveler.name)
-            intent.putExtra("TRAVELER_BIO", traveler.bio)
-            intent.putExtra("TRAVELER_INTERESTS", traveler.interests)
-            intent.putExtra("TRAVELER_IMAGE", traveler.imageResId)
-            holder.itemView.context.startActivity(intent)
+            val context = holder.itemView.context
+            val intent = Intent(context, PublicProfileActivity::class.java)
+            intent.putExtra("TARGET_UID", traveler.uid)
+            intent.putExtra("TARGET_NAME", traveler.name)
+            context.startActivity(intent)
         }
     }
 

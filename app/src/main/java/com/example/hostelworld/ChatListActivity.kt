@@ -6,77 +6,122 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class ChatListActivity : AppCompatActivity() {
 
     data class ChatChannel(val name: String, val type: String)
 
+    private lateinit var rvChats: RecyclerView
+    private lateinit var tvNoChats: TextView
+    private val unlockedChats = mutableListOf<ChatChannel>()
+    private lateinit var adapter: ChatAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat_list)
 
-        val rvChats = findViewById<RecyclerView>(R.id.rvChats)
-        val tvNoChats = findViewById<TextView>(R.id.tvNoChats)
+        rvChats = findViewById(R.id.rvChats)
+        tvNoChats = findViewById(R.id.tvNoChats)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavChat)
 
-        // Ensure "Chat" icon is highlighted
         bottomNav.selectedItemId = R.id.nav_chat
 
-        // Bottom Nav Logic
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_explore -> {
-                    startActivity(android.content.Intent(this, TravelerDashboardActivity::class.java))
-                    finish() // Closes the current screen so they don't pile up in the background
-                }
-                R.id.nav_trips -> {
-                    startActivity(android.content.Intent(this, SearchResultsActivity::class.java))
+                    startActivity(Intent(this, TravelerDashboardActivity::class.java))
                     finish()
                 }
-                R.id.nav_chat -> {
-                    // Already on the Chat screen, do nothing!
+                R.id.nav_trips -> {
+                    startActivity(Intent(this, SearchResultsActivity::class.java))
+                    finish()
                 }
+                R.id.nav_chat -> { } // Already here
                 R.id.nav_events -> {
-                    // --- FIXED: NOW POINTS TO THE NEW NOTIFICATIONS SCREEN! ---
-                    startActivity(android.content.Intent(this, NotificationsActivity::class.java))
+                    startActivity(Intent(this, NotificationsActivity::class.java))
                     finish()
                 }
                 R.id.nav_profile -> {
-                    val intent = android.content.Intent(this, ProfileActivity::class.java)
-                    // Note: If you have userName and userEmail variables in the file, add the putExtra lines here!
-                    startActivity(intent)
+                    startActivity(Intent(this, ProfileActivity::class.java))
                     finish()
                 }
             }
             true
         }
 
-        // FR-15 Logic: Generate chats based on booked trips
-        val unlockedChats = mutableListOf<ChatChannel>()
-        for (trip in BookingManager.bookedTrips) {
-            // Unlock a City Chat
-            unlockedChats.add(ChatChannel("${trip.destination} City Chat", "Connect with travelers in ${trip.destination}"))
-            // Unlock a Hostel Chat
-            unlockedChats.add(ChatChannel("${trip.name} Chat", "Meet your dorm mates!"))
-        }
+        rvChats.layoutManager = LinearLayoutManager(this)
+        adapter = ChatAdapter(unlockedChats)
+        rvChats.adapter = adapter
 
-        // Remove duplicates (in case they book 2 hostels in the same city)
-        val uniqueChats = unlockedChats.distinct().toList()
-
-        if (uniqueChats.isEmpty()) {
-            tvNoChats.visibility = View.VISIBLE
-            rvChats.visibility = View.GONE
-        } else {
-            rvChats.layoutManager = LinearLayoutManager(this)
-            rvChats.adapter = ChatAdapter(uniqueChats)
-        }
+        fetchUnlockedChats()
     }
 
-    // Simple Adapter for the Chat List
+    private fun fetchUnlockedChats() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        // 1. Get all confirmed bookings for this traveler
+        db.collection("bookings")
+            .whereEqualTo("travelerUid", uid)
+            .whereEqualTo("status", "Confirmed")
+            .get()
+            .addOnSuccessListener { bookings ->
+                if (bookings.isEmpty) {
+                    tvNoChats.visibility = View.VISIBLE
+                    rvChats.visibility = View.GONE
+                    return@addOnSuccessListener
+                }
+
+                tvNoChats.visibility = View.GONE
+                rvChats.visibility = View.VISIBLE
+
+                val tempChats = mutableListOf<ChatChannel>()
+                var fetchCount = 0
+                val totalDocs = bookings.size()
+
+                for (doc in bookings) {
+                    val propertyId = doc.getString("propertyId") ?: ""
+
+                    // 2. Look up the property details to get the Name and City
+                    if (propertyId.isNotEmpty()) {
+                        db.collection("properties").document(propertyId).get()
+                            .addOnSuccessListener { propDoc ->
+                                if (propDoc.exists()) {
+                                    val propName = propDoc.getString("name") ?: "Unknown Hostel"
+                                    val location = propDoc.getString("location") ?: "Unknown City"
+
+                                    // Unlock City Chat
+                                    tempChats.add(ChatChannel("$location City Chat", "Connect with travelers in $location!"))
+                                    // Unlock Hostel Chat
+                                    tempChats.add(ChatChannel("$propName Chat", "Meet your dorm mates!"))
+                                }
+
+                                fetchCount++
+                                if (fetchCount == totalDocs) {
+                                    unlockedChats.clear()
+                                    // Remove duplicates (e.g., if they booked 2 hostels in the same city)
+                                    unlockedChats.addAll(tempChats.distinct())
+                                    adapter.notifyDataSetChanged()
+                                }
+                            }
+                            .addOnFailureListener { fetchCount++ }
+                    } else {
+                        fetchCount++
+                    }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load your chats.", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     inner class ChatAdapter(private val chats: List<ChatChannel>) : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
         inner class ChatViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val tvName: TextView = view.findViewById(android.R.id.text1)
@@ -84,7 +129,6 @@ class ChatListActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-            // Using a built-in Android layout for a quick list item!
             val view = LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_2, parent, false)
             return ChatViewHolder(view)
         }
@@ -97,7 +141,6 @@ class ChatListActivity : AppCompatActivity() {
             holder.tvType.text = chat.type
             holder.tvType.setTextColor(android.graphics.Color.GRAY)
 
-            // Open the actual chat room when clicked
             holder.itemView.setOnClickListener {
                 val intent = Intent(this@ChatListActivity, ChatRoomActivity::class.java)
                 intent.putExtra("CHAT_NAME", chat.name)

@@ -11,7 +11,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-// --- NEW: ADDED imageResId TO THE DATA CLASS ---
 data class BookedTrip(
     val bookingId: String,
     val propertyId: String,
@@ -84,25 +83,36 @@ class TravelerDashboardActivity : AppCompatActivity() {
             }
             true
         }
-
-        val rvTravelBuddies = findViewById<RecyclerView>(R.id.rvTravelBuddies)
-        rvTravelBuddies.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rvTravelBuddies.adapter = TravelerAdapter(UserManager.communityTravelers)
     }
 
     override fun onResume() {
         super.onResume()
         fetchBookingsFromFirebase()
+        fetchCommunityTravelers() // NEW: Grab real users from the database!
+    }
+
+    private fun fetchCommunityTravelers() {
+        val myUid = auth.currentUser?.uid ?: return
+
+        db.collection("users").limit(15).get().addOnSuccessListener { docs ->
+            val realTravelers = mutableListOf<RealTraveler>()
+            for (doc in docs) {
+                if (doc.id != myUid) { // Don't show myself in the community list!
+                    val name = doc.getString("name") ?: "Traveler"
+                    realTravelers.add(RealTraveler(doc.id, name))
+                }
+            }
+            val rvTravelBuddies = findViewById<RecyclerView>(R.id.rvTravelBuddies)
+            rvTravelBuddies.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            rvTravelBuddies.adapter = TravelerAdapter(realTravelers)
+        }
     }
 
     private fun fetchBookingsFromFirebase() {
         val currentUser = auth.currentUser ?: return
 
-        db.collection("bookings")
-            .whereEqualTo("travelerUid", currentUser.uid)
-            .get()
+        db.collection("bookings").whereEqualTo("travelerUid", currentUser.uid).get()
             .addOnSuccessListener { documents ->
-
                 if (documents.isEmpty) {
                     bookedTripsList.clear()
                     adapter.notifyDataSetChanged()
@@ -137,24 +147,18 @@ class TravelerDashboardActivity : AppCompatActivity() {
                     if (propertyId.isNotEmpty()) {
                         db.collection("properties").document(propertyId).get()
                             .addOnSuccessListener { propDoc ->
-
                                 if (propDoc.exists()) {
                                     val propName = propDoc.getString("name") ?: "Unknown Property"
-
-                                    // --- NEW: ASSIGN A DEFAULT IMAGE RESOURCE ---
                                     val imageRes = R.drawable.room_1
-
                                     tempTrips.add(BookedTrip(bookingId, propertyId, propName, totalCost, status, dates, policy, imageRes))
                                 }
-
                                 fetchCount++
                                 if (fetchCount == totalDocs) {
                                     bookedTripsList.clear()
                                     bookedTripsList.addAll(tempTrips)
                                     adapter.notifyDataSetChanged()
                                 }
-                            }
-                            .addOnFailureListener {
+                            }.addOnFailureListener {
                                 fetchCount++
                                 if (fetchCount == totalDocs) {
                                     bookedTripsList.clear()

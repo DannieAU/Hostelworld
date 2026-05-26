@@ -80,8 +80,9 @@ class HostProfileActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_host_reports -> {
-                    // startActivity(Intent(this, HostReportsActivity::class.java))
-                    // finish()
+                    // --- FIXED: Uncommented the routing code! ---
+                    startActivity(Intent(this, HostReportsActivity::class.java))
+                    finish()
                 }
                 R.id.nav_host_profile -> {
                     // Already here, do nothing!

@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="My Bio"
-        android:textColor="#7C3AED"
+        android:textColor="#D45D3A"
         android:textStyle="bold" />
 
     <EditText
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="Travel Interests"
-        android:textColor="#7C3AED"
+        android:textColor="#D45D3A"
         android:textStyle="bold" />
 
     <EditText
@@ -58,6 +58,6 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="32dp"
-        android:backgroundTint="#7C3AED"
+        android:backgroundTint="#D45D3A"
         android:text="Save Changes" />
 </LinearLayout>

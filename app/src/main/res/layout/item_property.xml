@@ -70,7 +70,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="16dp"
-                android:backgroundTint="#7C3AED"
+                android:backgroundTint="#D45D3A"
                 android:text="Book Now"
                 android:textAllCaps="false"
                 android:textStyle="bold"

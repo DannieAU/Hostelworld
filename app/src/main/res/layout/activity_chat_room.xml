@@ -9,7 +9,7 @@
         android:id="@+id/toolbarChatRoom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#7C3AED"
+        android:background="#D45D3A"
         app:contentInsetStart="0dp">
 
         <LinearLayout
@@ -75,7 +75,7 @@
             android:id="@+id/btnSendMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#7C3AED"
+            android:backgroundTint="#D45D3A"
             android:text="Send" />
     </LinearLayout>
 </RelativeLayout>

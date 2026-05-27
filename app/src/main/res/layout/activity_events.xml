@@ -9,7 +9,7 @@
         android:id="@+id/toolbarEvents"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#7C3AED"
+        android:background="#D45D3A"
         app:title="Events &amp; Promos"
         app:titleTextColor="#FFFFFF" />
 
@@ -61,7 +61,7 @@
                         android:padding="12dp"
                         android:text="Use Code: SUMMER20"
                         android:textAlignment="center"
-                        android:textColor="#7C3AED"
+                        android:textColor="#D45D3A"
                         android:textSize="16sp"
                         android:textStyle="bold" />
                 </LinearLayout>

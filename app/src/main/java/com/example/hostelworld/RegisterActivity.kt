@@ -4,11 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -19,78 +18,71 @@ class RegisterActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 1. WAKE UP FIREBASE FIRST!
-        FirebaseApp.initializeApp(this)
-
-        // 2. Load the CORRECT screen
         setContentView(R.layout.activity_register)
 
-        // 3. Get the instances
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
-        val etName = findViewById<EditText>(R.id.etRegName)
-        val etEmail = findViewById<EditText>(R.id.etRegEmail)
-        val etPassword = findViewById<EditText>(R.id.etRegPassword)
+        val etName = findViewById<EditText>(R.id.etRegisterName)
+        val etEmail = findViewById<EditText>(R.id.etRegisterEmail)
+        val etPassword = findViewById<EditText>(R.id.etRegisterPassword)
+        val rgRole = findViewById<RadioGroup>(R.id.rgRole)
         val btnRegister = findViewById<Button>(R.id.btnRegister)
+        val tvLogin = findViewById<TextView>(R.id.tvLogin)
 
-        // Find the "Go to Login" text
-        val tvGoToLogin = findViewById<TextView>(R.id.tvGoToLogin)
-
-        // NOTE: Check your XML to make sure your Host RadioButton has the ID 'rbHost'
-        val rbHost = findViewById<RadioButton>(R.id.rbHost)
-
-        // --- Handle Registration Click ---
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
-            val role = if (rbHost.isChecked) "HOST" else "TRAVELER"
 
-            if (email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty()) {
-
-                // Create the user in Firebase Auth
-                auth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this) { task ->
-                        if (task.isSuccessful) {
-                            val userId = auth.currentUser?.uid
-
-                            // Save their Role and Name to Firestore
-                            val userMap = hashMapOf(
-                                "name" to name,
-                                "email" to email,
-                                "role" to role
-                            )
-
-                            if (userId != null) {
-                                db.collection("users").document(userId).set(userMap)
-                                    .addOnSuccessListener {
-                                        Toast.makeText(this, "Registration Successful!", Toast.LENGTH_SHORT).show()
-
-                                        // Send them to the correct dashboard!
-                                        if (role == "HOST") {
-                                            startActivity(Intent(this, HostDashboardActivity::class.java))
-                                        } else {
-                                            startActivity(Intent(this, TravelerDashboardActivity::class.java))
-                                        }
-                                        finish()
-                                    }
-                            }
-                        } else {
-                            Toast.makeText(this, "Registration Failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-            } else {
-                Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
+            if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            // Determine if they selected Host or Traveler
+            val role = if (rgRole.checkedRadioButtonId == R.id.rbHost) "HOST" else "TRAVELER"
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    val uid = auth.currentUser?.uid ?: return@addOnSuccessListener
+
+                    val userData = hashMapOf(
+                        "name" to name,
+                        "email" to email,
+                        "role" to role,
+                        "status" to "Active" // New accounts are Active by default!
+                    )
+
+                    db.collection("users").document(uid).set(userData)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Registration Successful!", Toast.LENGTH_SHORT).show()
+
+                            // Route them to the correct dashboard right after signing up
+                            if (role == "HOST") {
+                                val intent = Intent(this, HostDashboardActivity::class.java)
+                                intent.putExtra("USER_NAME", name)
+                                intent.putExtra("USER_EMAIL", email)
+                                startActivity(intent)
+                            } else {
+                                val intent = Intent(this, TravelerDashboardActivity::class.java)
+                                intent.putExtra("USER_NAME", name)
+                                intent.putExtra("USER_EMAIL", email)
+                                startActivity(intent)
+                            }
+                            finish()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Failed to save user data: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Registration Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
         }
 
-        // --- Handle 'Already have an account?' Click ---
-        tvGoToLogin.setOnClickListener {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
+        tvLogin.setOnClickListener {
+            finish() // Closes the register screen, instantly taking them back to the Login screen
         }
     }
 }

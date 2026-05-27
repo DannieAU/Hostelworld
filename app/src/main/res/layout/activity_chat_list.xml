@@ -9,7 +9,7 @@
         android:id="@+id/toolbarChatList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#7C3AED"
+        android:background="#D45D3A"
         app:title="My Chats"
         app:titleTextColor="#FFFFFF" />
 

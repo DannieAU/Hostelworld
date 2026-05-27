@@ -2,11 +2,12 @@ package com.example.hostelworld
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.button.MaterialButton
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -16,13 +17,20 @@ class ProfileActivity : AppCompatActivity() {
 
         val tvProfileName = findViewById<TextView>(R.id.tvProfileName)
         val tvProfileEmail = findViewById<TextView>(R.id.tvProfileEmail)
-        val btnLogout = findViewById<MaterialButton>(R.id.btnLogout)
+
+        // Changed from MaterialButton to standard Button to match the new XML
+        val btnLogout = findViewById<Button>(R.id.btnLogout)
         val bottomNavProfile = findViewById<BottomNavigationView>(R.id.bottomNavProfile)
 
         val llCurrency = findViewById<LinearLayout>(R.id.llCurrency)
         val tvCurrencyValue = findViewById<TextView>(R.id.tvCurrencyValue)
         val llDistance = findViewById<LinearLayout>(R.id.llDistance)
         val tvDistanceValue = findViewById<TextView>(R.id.tvDistanceValue)
+
+        // NEW: Grab the new settings rows from the redesign
+        val llAdsConsent = findViewById<LinearLayout>(R.id.llAdsConsent)
+        val llReport = findViewById<LinearLayout>(R.id.llReport)
+        val llHelp = findViewById<LinearLayout>(R.id.llHelp)
 
         val userName = intent.getStringExtra("USER_NAME")
         val userEmail = intent.getStringExtra("USER_EMAIL")
@@ -58,7 +66,7 @@ class ProfileActivity : AppCompatActivity() {
             builder.setTitle("Select Currency")
             builder.setSingleChoiceItems(currencies, selectedCurrencyIndex) { dialog, which ->
                 selectedCurrencyIndex = which
-                tvCurrencyValue.text = currencies[which]
+                tvCurrencyValue.text = "${currencies[which]} ▼" // Added arrow for UI consistency
                 dialog.dismiss()
             }
             builder.show()
@@ -72,46 +80,52 @@ class ProfileActivity : AppCompatActivity() {
             builder.setTitle("Select Distance Unit")
             builder.setSingleChoiceItems(distances, selectedDistanceIndex) { dialog, which ->
                 selectedDistanceIndex = which
-                tvDistanceValue.text = distances[which]
+                tvDistanceValue.text = "${distances[which]} ▼"
                 dialog.dismiss()
             }
             builder.show()
         }
 
+        // NEW: Click listeners for the generic settings rows
+        llAdsConsent.setOnClickListener {
+            Toast.makeText(this, "Ad Consent Settings Opened", Toast.LENGTH_SHORT).show()
+        }
+        llReport.setOnClickListener {
+            Toast.makeText(this, "Report Center Opened", Toast.LENGTH_SHORT).show()
+        }
+        llHelp.setOnClickListener {
+            Toast.makeText(this, "Help & Support Opened", Toast.LENGTH_SHORT).show()
+        }
+
         bottomNavProfile.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_explore -> {
-                    startActivity(android.content.Intent(this, TravelerDashboardActivity::class.java))
+                    startActivity(Intent(this, TravelerDashboardActivity::class.java))
                     finish()
                 }
                 R.id.nav_trips -> {
-                    startActivity(android.content.Intent(this, SearchResultsActivity::class.java))
+                    startActivity(Intent(this, SearchResultsActivity::class.java))
                     finish()
                 }
                 R.id.nav_chat -> {
-                    startActivity(android.content.Intent(this, ChatListActivity::class.java))
+                    startActivity(Intent(this, ChatListActivity::class.java))
                     finish()
                 }
                 R.id.nav_events -> {
-                    // --- FIXED: NOW POINTS TO THE NEW NOTIFICATIONS SCREEN! ---
-                    startActivity(android.content.Intent(this, NotificationsActivity::class.java))
+                    startActivity(Intent(this, NotificationsActivity::class.java))
                     finish()
                 }
                 R.id.nav_profile -> {
-                    val intent = android.content.Intent(this, ProfileActivity::class.java)
-                    intent.putExtra("USER_NAME", userName)
-                    intent.putExtra("USER_EMAIL", userEmail)
-                    intent.putExtra("USER_ROLE", userRole)
-                    startActivity(intent)
-                    finish()
+                    // Already here, do nothing!
                 }
             }
             true
         }
 
-        val btnEdit = findViewById<android.widget.Button>(R.id.btnGoToEdit)
+        // --- FIXED: Updated ID to perfectly match the new XML layout ---
+        val btnEdit = findViewById<Button>(R.id.btnEditProfile)
         btnEdit.setOnClickListener {
-            val intent = android.content.Intent(this, EditProfileActivity::class.java)
+            val intent = Intent(this, EditProfileActivity::class.java)
             startActivity(intent)
         }
     }
@@ -120,8 +134,9 @@ class ProfileActivity : AppCompatActivity() {
         super.onResume()
         val prefs = getSharedPreferences("UserProfile", MODE_PRIVATE)
 
-        val tvBio = findViewById<TextView>(R.id.tvDisplayBio)
-        val tvInterests = findViewById<TextView>(R.id.tvDisplayInterests)
+        // --- FIXED: Updated IDs to perfectly match the new XML layout ---
+        val tvBio = findViewById<TextView>(R.id.tvProfileBio)
+        val tvInterests = findViewById<TextView>(R.id.tvProfileInterests)
 
         tvBio.text = prefs.getString("BIO", "No bio added yet.")
         tvInterests.text = prefs.getString("INTERESTS", "No interests added yet.")

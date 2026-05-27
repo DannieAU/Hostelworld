@@ -32,7 +32,6 @@ class PublicProfileActivity : AppCompatActivity() {
         tvName.text = targetName
         btnBack.setOnClickListener { finish() }
 
-        // 1. Fetch current user's active property IDs
         db.collection("bookings")
             .whereEqualTo("travelerUid", myUid)
             .whereEqualTo("status", "Confirmed")
@@ -46,7 +45,6 @@ class PublicProfileActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // 2. Fetch target user's active property IDs
                 db.collection("bookings")
                     .whereEqualTo("travelerUid", targetUid)
                     .whereEqualTo("status", "Confirmed")
@@ -54,23 +52,21 @@ class PublicProfileActivity : AppCompatActivity() {
                     .addOnSuccessListener { targetDocs ->
                         val theirProperties = targetDocs.documents.mapNotNull { it.getString("propertyId") }
 
-                        // 3. THE MAGIC: Do any of our Property IDs match?
                         val sharedPropertyIds = myProperties.intersect(theirProperties.toSet())
 
                         if (sharedPropertyIds.isNotEmpty()) {
                             val sharedPropId = sharedPropertyIds.first()
 
-                            // 4. Get the property name to open the correct chat!
                             db.collection("properties").document(sharedPropId).get()
                                 .addOnSuccessListener { propDoc ->
                                     val propName = propDoc.getString("name") ?: "Hostel"
 
                                     tvStatus.text = "You are both staying at $propName!"
-                                    tvStatus.setTextColor(Color.parseColor("#4CAF50")) // Green text
+                                    tvStatus.setTextColor(Color.parseColor("#4CAF50"))
 
-                                    // Unlock the Chat Gateway
+                                    // --- FIXED: BUTTON NOW TURNS ORANGE INSTEAD OF PURPLE! ---
                                     btnChat.isEnabled = true
-                                    btnChat.setBackgroundColor(Color.parseColor("#7C3AED")) // Purple
+                                    btnChat.setBackgroundColor(Color.parseColor("#D45D3A"))
                                     btnChat.text = "Open $propName Chat"
 
                                     btnChat.setOnClickListener {
@@ -81,7 +77,6 @@ class PublicProfileActivity : AppCompatActivity() {
                                     }
                                 }
                         } else {
-                            // Locked!
                             tvStatus.text = "You don't have any shared destinations with $targetName."
                             btnChat.text = "No Shared Trips"
                         }

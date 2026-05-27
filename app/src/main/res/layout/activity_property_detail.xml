@@ -128,7 +128,7 @@
                     android:textAlignment="center"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:textColor="#7C3AED"
+                    android:textColor="#D45D3A"
                     android:layout_marginTop="4dp"/>
 
                 <TextView
@@ -177,7 +177,7 @@
             android:id="@+id/btnDetailBook"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#7C3AED"
+            android:backgroundTint="#D45D3A"
             android:text="Book Now" />
     </LinearLayout>
 

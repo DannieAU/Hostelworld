@@ -38,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="$0 / night"
-                android:textColor="#7C3AED"
+                android:textColor="#D45D3A"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>

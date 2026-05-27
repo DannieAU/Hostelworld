@@ -46,7 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$25 / bed"
-                android:textColor="#7C3AED" />
+                android:textColor="#D45D3A" />
         </LinearLayout>
 
         <Button
@@ -108,7 +108,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$80 / room"
-                android:textColor="#7C3AED" />
+                android:textColor="#D45D3A" />
         </LinearLayout>
 
         <Button
@@ -166,7 +166,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_marginTop="16dp"
-        android:backgroundTint="#7C3AED"
+        android:backgroundTint="#D45D3A"
         android:enabled="false"
         android:text="Continue to Payment" />
 </LinearLayout>

@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:text="User Name"
         android:textSize="12sp"
-        android:textColor="#7C3AED"
+        android:textColor="#D45D3A"
         android:textStyle="bold"
         android:layout_marginStart="4dp"/>
 

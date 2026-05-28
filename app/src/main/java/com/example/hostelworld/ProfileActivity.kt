@@ -8,6 +8,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -17,8 +19,6 @@ class ProfileActivity : AppCompatActivity() {
 
         val tvProfileName = findViewById<TextView>(R.id.tvProfileName)
         val tvProfileEmail = findViewById<TextView>(R.id.tvProfileEmail)
-
-        // Changed from MaterialButton to standard Button to match the new XML
         val btnLogout = findViewById<Button>(R.id.btnLogout)
         val bottomNavProfile = findViewById<BottomNavigationView>(R.id.bottomNavProfile)
 
@@ -27,7 +27,6 @@ class ProfileActivity : AppCompatActivity() {
         val llDistance = findViewById<LinearLayout>(R.id.llDistance)
         val tvDistanceValue = findViewById<TextView>(R.id.tvDistanceValue)
 
-        // NEW: Grab the new settings rows from the redesign
         val llAdsConsent = findViewById<LinearLayout>(R.id.llAdsConsent)
         val llReport = findViewById<LinearLayout>(R.id.llReport)
         val llHelp = findViewById<LinearLayout>(R.id.llHelp)
@@ -36,6 +35,7 @@ class ProfileActivity : AppCompatActivity() {
         val userEmail = intent.getStringExtra("USER_EMAIL")
         val userRole = intent.getStringExtra("USER_ROLE")
 
+        // Initial setup from Login intent (Will be quickly overwritten by onResume if updated)
         if (!userName.isNullOrEmpty()) {
             tvProfileName.text = userName
         }
@@ -52,6 +52,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         btnLogout.setOnClickListener {
+            FirebaseAuth.getInstance().signOut() // Best practice: Sign out of Firebase!
             val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
@@ -60,13 +61,12 @@ class ProfileActivity : AppCompatActivity() {
 
         val currencies = arrayOf("USD ($)", "EUR (€)", "GBP (£)", "PHP (₱)", "JPY (¥)")
         var selectedCurrencyIndex = 0
-
         llCurrency.setOnClickListener {
             val builder = androidx.appcompat.app.AlertDialog.Builder(this)
             builder.setTitle("Select Currency")
             builder.setSingleChoiceItems(currencies, selectedCurrencyIndex) { dialog, which ->
                 selectedCurrencyIndex = which
-                tvCurrencyValue.text = "${currencies[which]} ▼" // Added arrow for UI consistency
+                tvCurrencyValue.text = "${currencies[which]} ▼"
                 dialog.dismiss()
             }
             builder.show()
@@ -74,7 +74,6 @@ class ProfileActivity : AppCompatActivity() {
 
         val distances = arrayOf("Kilometers (Km)", "Miles (Mi)")
         var selectedDistanceIndex = 0
-
         llDistance.setOnClickListener {
             val builder = androidx.appcompat.app.AlertDialog.Builder(this)
             builder.setTitle("Select Distance Unit")
@@ -86,7 +85,6 @@ class ProfileActivity : AppCompatActivity() {
             builder.show()
         }
 
-        // NEW: Click listeners for the generic settings rows
         llAdsConsent.setOnClickListener {
             Toast.makeText(this, "Ad Consent Settings Opened", Toast.LENGTH_SHORT).show()
         }
@@ -116,29 +114,40 @@ class ProfileActivity : AppCompatActivity() {
                     finish()
                 }
                 R.id.nav_profile -> {
-                    // Already here, do nothing!
+                    // Already here
                 }
             }
             true
         }
 
-        // --- FIXED: Updated ID to perfectly match the new XML layout ---
         val btnEdit = findViewById<Button>(R.id.btnEditProfile)
         btnEdit.setOnClickListener {
-            val intent = Intent(this, EditProfileActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, EditProfileActivity::class.java))
         }
     }
 
+    // --- BULLETPROOF DATA REFRESH ---
     override fun onResume() {
         super.onResume()
         val prefs = getSharedPreferences("UserProfile", MODE_PRIVATE)
-
-        // --- FIXED: Updated IDs to perfectly match the new XML layout ---
+        val tvName = findViewById<TextView>(R.id.tvProfileName)
         val tvBio = findViewById<TextView>(R.id.tvProfileBio)
         val tvInterests = findViewById<TextView>(R.id.tvProfileInterests)
 
+        // 1. Load Local Data (Bio & Interests)
         tvBio.text = prefs.getString("BIO", "No bio added yet.")
         tvInterests.text = prefs.getString("INTERESTS", "No interests added yet.")
+
+        // 2. Fetch Absolute Latest Name Directly from Firestore
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance().collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    val latestName = doc.getString("name")
+                    if (!latestName.isNullOrEmpty()) {
+                        tvName.text = latestName
+                    }
+                }
+        }
     }
 }

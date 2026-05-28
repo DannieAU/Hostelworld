@@ -2,62 +2,85 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
     android:orientation="vertical"
-    android:padding="24dp">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Edit Profile"
-        android:textColor="#000000"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+    android:padding="24dp"
+    android:background="#FFFFFF">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:text="Edit Profile"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- NEW: Full Name Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Full Name"
+        android:textColor="#D45D3A"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etEditName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:drawable/editbox_background"
+        android:padding="12dp"
+        android:inputType="textPersonName"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Bio Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="My Bio"
         android:textColor="#D45D3A"
-        android:textStyle="bold" />
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
 
     <EditText
         android:id="@+id/etEditBio"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:background="@android:drawable/editbox_background"
-        android:hint="Tell other travelers about yourself..."
-        android:inputType="textMultiLine"
-        android:minLines="4"
         android:padding="12dp"
-        android:textColor="#000000" />
+        android:minLines="3"
+        android:gravity="top|start"
+        android:inputType="textMultiLine"
+        android:layout_marginBottom="24dp"/>
 
+    <!-- Travel Interests Field -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:text="Travel Interests"
         android:textColor="#D45D3A"
-        android:textStyle="bold" />
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
 
     <EditText
         android:id="@+id/etEditInterests"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:background="@android:drawable/editbox_background"
-        android:hint="e.g., Backpacking, Food Tours"
-        android:inputType="text"
         android:padding="12dp"
-        android:textColor="#000000" />
+        android:inputType="text"
+        android:layout_marginBottom="32dp"/>
 
     <Button
-        android:id="@+id/btnSaveEdits"
+        android:id="@+id/btnSaveChanges"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="32dp"
+        android:layout_height="55dp"
+        android:text="Save Changes"
+        android:textColor="#FFFFFF"
         android:backgroundTint="#D45D3A"
-        android:text="Save Changes" />
+        android:textStyle="bold"/>
+
 </LinearLayout>
